@@ -9,7 +9,7 @@ def addTask(user, id, tit, tag, cust, stat, due_time,
             created=None, begin_time=None, last_begin_time=None, end_time=None, duration=None):
     if created is None:
         # Called from the kanban page
-        _tasks[stat].append({
+        _tasks[user][stat].append({
                              'user': user,
                              'id': id, 
                              'title': tit, 
@@ -24,7 +24,7 @@ def addTask(user, id, tit, tag, cust, stat, due_time,
                              })
     else:
         # Called during _tasks initialization
-        _tasks[stat].append({
+        _tasks[user][stat].append({
                              'user': user,
                              'id': id, 
                              'title': tit, 
@@ -39,21 +39,24 @@ def addTask(user, id, tit, tag, cust, stat, due_time,
                              })
 
 def initTasks(user):
+    if user not in _tasks:
+        _tasks[user]={}
+
     for el in STATUSES:
-        _tasks[el]=[]
+        _tasks[user][el]=[]
     retval = dbutils.taskDB.read_all_tasks(user)
     for el in retval:
         addTask(el[1], el[0], el[2], el[3], el[4], el[6], el[5], el[7], el[8], el[9], el[10], el[11])
 
-def removeTask(id):
+def removeTask(user, id):
     for s in STATUSES:
-        for el in _tasks[s]:
+        for el in _tasks[user][s]:
             if el['id']==id:
                 _tasks[s].remove(el)
 
-def moveTask(id, stat):
+def moveTask(user, id, stat):
     for s in STATUSES:
-        for el in _tasks[s]:
+        for el in _tasks[user][s]:
             if el['id']==id:
                 # If there's no change do nothing
                 if s==stat:
@@ -73,13 +76,14 @@ def moveTask(id, stat):
                 if  stat=='Ready':
                     if newel['last_begin_time'] != 0.0:
                         newel['duration']+=(time()-newel['last_begin_time'])
-                _tasks[s].remove(el)
-                _tasks[stat].append(newel)
+                _tasks[user][s].remove(el)
+                _tasks[user][stat].append(newel)
+                return
 
 
-def findTask(id):
+def findTask(user, id):
     for s in STATUSES:
-        for el in _tasks[s]:
+        for el in _tasks[user][s]:
             if el['id']==id:
                 return el
     return None
@@ -87,18 +91,10 @@ def findTask(id):
 def printTasks(user):
     for stat in STATUSES:
         print('*'*20, stat, '*'*20)
-        for el in _tasks[stat]:
+        for el in _tasks[user][stat]:
             if el['user']==user:
-                print(f"ID: {el['id']}; \
-                    Title: {el['title']}; \
-                    Tag: {el['tag']}; \
-                    Customer:{el['customer']}; \
-                    Created: {el['created']}; \
-                    Due by: {el['due_time']}; \
-                    Begin time: {el['begin_time']}; \
-                    Last begin time: {el['last_begin_time']}; \
-                    End time: {el['end_time']}; \
-                    Duration: {el['duration']}"
-                    )
+                for k in el.keys():
+                    print(f'{k}, {el[k]}\t', end='')
+                print()
         print('*'*50)
         print()

@@ -34,11 +34,11 @@ def kanban_page():
         tag.value=''
         stat.value=''
         cust.value=''
-        date.value=''
+        date.value=getToday()
 
     def createTaskUI():
         for s in STATUSES:
-            for el in tasks._tasks[s]:
+            for el in tasks._tasks[app.storage.user['username']][s]:
                 with containers[findContainer(s)]:
                     dnd.card(ToDo(el['id'], el['title'], el['tag'], s, el['customer'], el['duration']))
     

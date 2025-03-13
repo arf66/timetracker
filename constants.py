@@ -16,4 +16,4 @@ TAGS_TEXT_COLORS={'ADM':'black-600',
              'SAL':'black-600', 
              'TRA':'black-600'}
 DATABASE='timetracker.db'
-VERSION='0.2'
+VERSION='0.3'

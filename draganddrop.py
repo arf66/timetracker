@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, Optional, Protocol
 
-from nicegui import ui
+from nicegui import app,ui
 from constants import COLORS, TAGS_COLORS, TAGS_TEXT_COLORS
 from tasks import moveTask, removeTask
 from utility import logNavigate, sync_db, secsToHHMM
@@ -50,7 +50,7 @@ class column(ui.scroll_area):
         dragged.parent_slot.parent.remove(dragged)
         with self:
             card(dragged.item)
-            moveTask(dragged.item.id, self.name)
+            moveTask(app.storage.user["username"], dragged.item.id, self.name)
         self.on_drop(dragged.item, self.name)
         dragged = None
 
@@ -59,7 +59,7 @@ class card(ui.card):
 
     def delCard(self, id):
         self.parent_slot.parent.remove(self)
-        removeTask(id)
+        removeTask(app.storage.user["username"], id)
 
     def goToDetails(self, id):
         sync_db()

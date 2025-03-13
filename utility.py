@@ -22,7 +22,7 @@ def setBackgroud():
 def sync_db() -> None:
     dbutils.taskDB.delete_user_tasks(app.storage.user["username"])
     for s in STATUSES:
-        for el in _tasks[s]:
+        for el in _tasks[app.storage.user["username"]][s]:
             if el['user']==app.storage.user["username"]:
                 dbutils.taskDB.create_task(el['id'], el['user'], el['title'], el['tag'], el['customer'], el['created'], s, 
                     el['due_time'], el['begin_time'], el['last_begin_time'], el['end_time'], el['duration'])

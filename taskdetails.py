@@ -76,7 +76,7 @@ def details_page(id: str):
 
     if id[:8]=='urn:uuid:':
         id=id[8:]
-    task = findTask(id)
+    task = findTask(app.storage.user['username'], id)
     if  task is None:
         logNavigate('/kanban/')
     setBackgroud()
