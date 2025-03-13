@@ -1,3 +1,5 @@
+from constants import DEBUG
+
 LOGGED_OUT=0
 LOGGED_IN=0
 
@@ -27,26 +29,32 @@ class UserManager:
     def create_user(self, username, role):
         if username not in self.users:
             self.users[username] = self._User(username, role)
-            print(f"User '{username}' created with role '{role}'.")
+            if DEBUG:
+                print(f"User '{username}' created with role '{role}'.")
         else:
-            print(f"User '{username}' already exists.")
+            if DEBUG:
+                print(f"User '{username}' already exists.")
 
     def login(self, username):
         user = self.users.get(username)
         if user:
             self._current_user=username
             user.login()
-            print(f"User '{username}' logged in.")
+            if DEBUG:
+                print(f"User '{username}' logged in.")
         else:
-            print(f"User '{username}' not found.")
+            if DEBUG:
+                print(f"User '{username}' not found.")
 
     def logout(self, username):
         user = self.users.get(username)
         if user:
             user.logout()
-            print(f"User '{username}' logged out.")
+            if DEBUG:
+                print(f"User '{username}' logged out.")
         else:
-            print(f"User '{username}' not found.")
+            if DEBUG:
+                print(f"User '{username}' not found.")
 
     def get_user_state(self, username):
         user = self.users.get(username)

@@ -1,4 +1,4 @@
-from constants import STATUSES
+from constants import DB_STATUSES
 from copy import deepcopy
 from time import time
 import dbutils
@@ -42,20 +42,20 @@ def initTasks(user):
     if user not in _tasks:
         _tasks[user]={}
 
-    for el in STATUSES:
+    for el in DB_STATUSES:
         _tasks[user][el]=[]
     retval = dbutils.taskDB.read_all_tasks(user)
     for el in retval:
         addTask(el[1], el[0], el[2], el[3], el[4], el[6], el[5], el[7], el[8], el[9], el[10], el[11])
 
 def removeTask(user, id):
-    for s in STATUSES:
+    for s in DB_STATUSES:
         for el in _tasks[user][s]:
             if el['id']==id:
                 _tasks[s].remove(el)
 
 def moveTask(user, id, stat):
-    for s in STATUSES:
+    for s in DB_STATUSES:
         for el in _tasks[user][s]:
             if el['id']==id:
                 # If there's no change do nothing
@@ -82,14 +82,14 @@ def moveTask(user, id, stat):
 
 
 def findTask(user, id):
-    for s in STATUSES:
+    for s in DB_STATUSES:
         for el in _tasks[user][s]:
             if el['id']==id:
                 return el
     return None
 
 def printTasks(user):
-    for stat in STATUSES:
+    for stat in DB_STATUSES:
         print('*'*20, stat, '*'*20)
         for el in _tasks[user][stat]:
             if el['user']==user:

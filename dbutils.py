@@ -1,17 +1,24 @@
 import sqlite3
 from sqlite3 import Error
-from constants import DATABASE
+from constants import DATABASE, DEBUG
+
+
+def debugprint(s):
+    if DEBUG:
+        print(s)
+
 
 class TrelloDatabase:
+
     def __init__(self, db_file):
         """Initialize the database connection."""
         self.connection = None
         try:
             self.connection = sqlite3.connect(db_file)
-            print(f"Connected to database {db_file}")
+            debugprint(f"Connected to database {db_file}")
             self.create_table()
         except Error as e:
-            print(f"Error connecting to database: {e}")
+            debugprint(f"Error connecting to database: {e}")
 
     def create_table(self):
         """Create the users table if it doesn't exist."""
@@ -27,9 +34,9 @@ class TrelloDatabase:
             cursor = self.connection.cursor()
             cursor.execute(create_table_sql)
             self.connection.commit()
-            print("Users table created or verified.")
+            debugprint("Users table created or verified.")
         except Error as e:
-            print(f"Error creating table: {e}")
+            debugprint(f"Error creating table: {e}")
 
     def create_user(self, username, password, role, usertz):
         """Insert a new user into the users table."""
@@ -38,10 +45,10 @@ class TrelloDatabase:
             cursor.execute("INSERT INTO users (username, password, role, usertz) VALUES (?, ?, ?, ?)",
                            (username, password, role, usertz))
             self.connection.commit()
-            print("User created successfully.")
+            debugprint("User created successfully.")
             return True
         except Error as e:
-            print(f"Error creating user: {e}")
+            debugprint(f"Error creating user: {e}")
             return False
 
     def get_user(self, username):
@@ -52,7 +59,7 @@ class TrelloDatabase:
             user = cursor.fetchone()
             return user
         except Error as e:
-            print(f"Error fetching user: {e}")
+            debugprint(f"Error fetching user: {e}")
             return None
 
     def update_user(self, username, password=None, role=None):
@@ -69,9 +76,9 @@ class TrelloDatabase:
                 cursor.execute("UPDATE users SET role = ? WHERE username = ?",
                                (role, username))
             self.connection.commit()
-            print("User updated successfully.")
+            debugprint("User updated successfully.")
         except Error as e:
-            print(f"Error updating user: {e}")
+            debugprint(f"Error updating user: {e}")
 
     def delete_user(self, username):
         """Delete a user from the users table."""
@@ -79,9 +86,9 @@ class TrelloDatabase:
             cursor = self.connection.cursor()
             cursor.execute("DELETE FROM users WHERE username = ?", (username,))
             self.connection.commit()
-            print("User deleted successfully.")
+            debugprint("User deleted successfully.")
         except Error as e:
-            print(f"Error deleting user: {e}")
+            debugprint(f"Error deleting user: {e}")
 
     def check_user(self, usr, pwd):
         """Check if a user exist with the given password"""
@@ -91,14 +98,14 @@ class TrelloDatabase:
             rows = cursor.fetchall()
             return len(rows)>0
         except Error as e:
-            print(f"Error checking user: {e}")
+            debugprint(f"Error checking user: {e}")
             return False
 
     def close_connection(self):
         """Close the database connection."""
         if self.connection:
             self.connection.close()
-            print("Database connection closed.")
+            debugprint("Database connection closed.")
 
 class Tasks:
     def __init__(self, db_name=DATABASE, user=None):
@@ -127,12 +134,15 @@ class Tasks:
             ''')
 
     def create_task(self, id, user, title, tag, customer, created_time, status, due_time, begin_time, last_begin_time, end_time, duration):
-        with self.connection:
-            cursor = self.connection.execute('''
-                INSERT INTO tasks (id, user, title, tag, customer, created, status, due_time, begin_time, last_begin_time, end_time, duration)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (id, user, title, tag, customer, created_time, status, due_time, begin_time, last_begin_time, end_time, duration))
-            return cursor.lastrowid
+        try:
+            with self.connection:
+                cursor = self.connection.execute('''
+                    INSERT INTO tasks (id, user, title, tag, customer, created, status, due_time, begin_time, last_begin_time, end_time, duration)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (id, user, title, tag, customer, created_time, status, due_time, begin_time, last_begin_time, end_time, duration))
+            return True
+        except:
+            return False
 
     def read_task(self, task_id):
         cursor = self.connection.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
@@ -209,13 +219,3 @@ class Tasks:
 # Globals
 userDB: TrelloDatabase = None
 taskDB: Tasks = None
-
-# Example usage
-if __name__ == "__main__":
-    db = TrelloDatabase(DATABASE)
-    db.create_user('john_doe', 'password123', 'admin')
-    user = db.get_user('john_doe')
-    print(f"Fetched user: {user}")
-    db.update_user('john_doe', password='newpassword123')
-    db.delete_user('john_doe')
-    db.close_connection()

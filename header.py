@@ -1,6 +1,4 @@
-from nicegui import app, ui
-from tasks import _tasks
-from constants import STATUSES
+from nicegui import ui
 from utility import sync_db
 
 def logout() -> None:

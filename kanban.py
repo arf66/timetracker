@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from dataclasses import dataclass
 import draganddrop as dnd
-from constants import STATUSES, TAGS, DATABASE
+from constants import UI_STATUSES, TAGS, DATABASE, DEBUG
 from nicegui import app,ui
 from header import header
 from footer import footer
@@ -37,7 +37,7 @@ def kanban_page():
         date.value=getToday()
 
     def createTaskUI():
-        for s in STATUSES:
+        for s in UI_STATUSES:
             for el in tasks._tasks[app.storage.user['username']][s]:
                 with containers[findContainer(s)]:
                     dnd.card(ToDo(el['id'], el['title'], el['tag'], s, el['customer'], el['duration']))
@@ -82,7 +82,7 @@ def kanban_page():
     with ui.splitter(horizontal=False, reverse=False, value=70).classes('w-full h-full') as splitter:
         with splitter.before:
             with ui.row().classes('w-full h-full'):
-                for i,e in enumerate(STATUSES):
+                for i,e in enumerate(UI_STATUSES):
                     with dnd.column(e, on_drop=handle_drop) as el:
                         containers.append(el)
                     ui.space()             
@@ -92,7 +92,7 @@ def kanban_page():
                     titleField=ui.input(label='Title', placeholder='Title').classes('w-full')
                     tagField=ui.select(TAGS, label='Tag').classes('w-full').props('use-chips')
                     custField=ui.input(label='Customer', placeholder='Title').classes('w-full')
-                    statusField=ui.select(STATUSES, label='Status').classes('w-full').props('use-chips')
+                    statusField=ui.select(UI_STATUSES, label='Status').classes('w-full').props('use-chips')
                     with ui.input('Due Date', value=getToday()).classes('w-full') as date:
                         with ui.menu().props('no-parent-event') as menu:
                             with ui.date().bind_value(date):
@@ -103,8 +103,9 @@ def kanban_page():
                     with ui.row().classes('w-full'):
                         ui.button('Clear', on_click= lambda: clearFields(titleField, tagField, statusField, custField, date)).props('flat')
                         ui.space()
-                        ui.button('Debug', on_click= lambda: tasks.printTasks(app.storage.user["username"]))
-                        ui.space()
+                        if DEBUG:
+                            ui.button('Debug', on_click= lambda: tasks.printTasks(app.storage.user["username"]))
+                            ui.space()
                         ui.button('Create', on_click= lambda: createTask(titleField, tagField, statusField, custField, date)).props('flat')
         tasks.initTasks(app.storage.user["username"])
         createTaskUI()
