@@ -1,0 +1,7 @@
+.nicegui
+__pycache__
+.vscode
+-- SQLite.sql 
+timetracker.db
+timetracker.session.sql
+*.log
