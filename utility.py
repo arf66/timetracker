@@ -3,6 +3,7 @@ import dbutils
 from constants import DB_STATUSES
 from tasks import _tasks
 from datetime import datetime, timedelta
+from time import time
 import pytz
 from json import load
 from uuid import uuid4
@@ -70,6 +71,11 @@ def fromEpochToDatetime(epoch_time):
     
     # Return a tuple with the date and time
     return (date_string, time_string)
+
+def daysDifference(due):
+    # due comes as an epoch timestamp
+    # calculate difference in days
+    return int((due - time())/86400)
 
 def secsToHHMM(seconds):
     # Create a timedelta object from the given number of seconds

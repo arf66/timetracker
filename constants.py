@@ -1,8 +1,8 @@
 UI_STATUSES=['Ready', 'Doing', 'Done']
 DB_STATUSES=['Ready', 'Doing', 'Done', 'Deleted', 'Archived']
-COLORS={'Ready': 'bg-gray-100', 
-        'Doing': 'bg-lime-100', 
-        'Done': 'bg-red-200'}
+COLORS={'Ready': 'bg-gray-200 opacity-85', 
+        'Doing': 'bg-lime-200 opacity-85', 
+        'Done': 'bg-red-300 opacity-85'}
 TAGS=['ADM', 'ENG', 'OPS', 'PRE', 'SAL', 'TRA']
 TAGS_COLORS={'ADM':'grey-100', 
              'ENG':'sky-100', 
@@ -21,4 +21,4 @@ TAGS_TEXT_COLORS={
              'TRA':'black-600'}
 DATABASE='timetracker.db'
 DEBUG=False
-VERSION='0.4'
+VERSION='0.5'

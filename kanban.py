@@ -8,7 +8,8 @@ from footer import footer
 import dbutils
 import tasks
 from uuid import uuid4
-from utility import setBackgroud, getEpochFromDateTime, protectPage, logNavigate, getToday
+from utility import setBackgroud, getEpochFromDateTime, protectPage, logNavigate, getToday, daysDifference
+from customers import CustomersManager
 
 @ui.page('/kanban/')
 def kanban_page():
@@ -20,8 +21,14 @@ def kanban_page():
         status: str
         customer: str
         duration: int
+        due: str
 
     containers=[]
+    dbutils.taskDB = dbutils.Tasks(db_name=DATABASE, user=app.storage.user["username"])
+    tasks.initTasks(app.storage.user["username"])
+    custlist=CustomersManager()
+    custlist.load(app.storage.user["username"], tasks._tasks)
+
 
     def findContainer(n):
         for i,e in enumerate(containers):
@@ -39,8 +46,9 @@ def kanban_page():
     def createTaskUI():
         for s in UI_STATUSES:
             for el in tasks._tasks[app.storage.user['username']][s]:
+                due = str(daysDifference(el['due_time']))
                 with containers[findContainer(s)]:
-                    dnd.card(ToDo(el['id'], el['title'], el['tag'], s, el['customer'], el['duration']))
+                    dnd.card(ToDo(el['id'], el['title'], el['tag'], s, el['customer'], el['duration'], due))
     
     def createTask(tit, tag, stat, cust, date):
         def checkField(f,t):
@@ -65,7 +73,9 @@ def kanban_page():
         tasks.addTask(app.storage.user["username"], task_id, tit.value, tag.value, cust.value, stat.value, due_time)
 
         with containers[findContainer(stat.value)]:
-            dnd.card(ToDo(task_id, tit.value, tag.value, stat.value, cust.value, 0.0))
+            due = str(daysDifference(due_time))
+            dnd.card(ToDo(task_id, tit.value, tag.value, stat.value, cust.value, 0.0, due))
+        custlist.add(cust.value)
         clearFields(tit,tag, stat, cust, date)
 
     def handle_drop(todo: ToDo, location: str):
@@ -75,7 +85,6 @@ def kanban_page():
         logNavigate('/login/')
         return
     
-    dbutils.taskDB = dbutils.Tasks(db_name=DATABASE, user=app.storage.user["username"])
     header()
     setBackgroud()
 
@@ -91,7 +100,7 @@ def kanban_page():
                 with ui.column().classes('w-96 p-4 rounded shadow-2'):
                     titleField=ui.input(label='Title', placeholder='Title').classes('w-full')
                     tagField=ui.select(TAGS, label='Tag').classes('w-full').props('use-chips')
-                    custField=ui.input(label='Customer', placeholder='Title').classes('w-full')
+                    custField=ui.input(label='Customer', placeholder='Title', autocomplete=custlist.get_all()).classes('w-full')
                     statusField=ui.select(UI_STATUSES, label='Status').classes('w-full').props('use-chips')
                     with ui.input('Due Date', value=getToday()).classes('w-full') as date:
                         with ui.menu().props('no-parent-event') as menu:
@@ -107,7 +116,6 @@ def kanban_page():
                             ui.button('Debug', on_click= lambda: tasks.printTasks(app.storage.user["username"]))
                             ui.space()
                         ui.button('Create', on_click= lambda: createTask(titleField, tagField, statusField, custField, date)).props('flat')
-        tasks.initTasks(app.storage.user["username"])
         createTaskUI()
     footer()
 

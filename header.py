@@ -10,7 +10,7 @@ def header():
         with ui.row().classes('w-full'):
             ui.image('static/logo.png').classes('w-12')
             ui.space()
-            ui.label(f'Time Tracker').classes('text-slate-600 text-xl')
+            ui.label(f'Time Tracker').classes('text-slate-600 text-3xl font-[Roboto] font-bold')
             ui.space()
             with ui.button(on_click=sync_db, icon='sync').classes('w-12').props('outline round'):
                 ui.tooltip('Synchronize to the DB')

@@ -52,7 +52,7 @@ def removeTask(user, id):
     for s in DB_STATUSES:
         for el in _tasks[user][s]:
             if el['id']==id:
-                _tasks[s].remove(el)
+                _tasks[user][s].remove(el)
 
 def moveTask(user, id, stat):
     for s in DB_STATUSES:
@@ -85,7 +85,7 @@ def findTask(user, id):
     for s in DB_STATUSES:
         for el in _tasks[user][s]:
             if el['id']==id:
-                return el
+                return (s,el)
     return None
 
 def printTasks(user):

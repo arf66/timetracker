@@ -14,6 +14,7 @@ class Item(Protocol):
     tag: str
     customer: str
     duration: int
+    due: str
 
 
 dragged: Optional[card] = None
@@ -25,7 +26,7 @@ class column(ui.scroll_area):
         super().__init__()
         with self.classes(f'{COLORS[name]} w-96 p-4 rounded shadow-2'):
             self.style('height: calc(100vh - 12rem)')
-            ui.label(name).classes('text-bold text-2xl text-blue-500')
+            ui.label(name).classes('text-bold text-2xl text-blue-500 font-[Roboto]')
         self.name = name
         self.on('dragover.prevent', self.highlight)
         self.on('dragleave', self.unhighlight)
@@ -69,20 +70,26 @@ class card(ui.card):
         super().__init__()
         self.item = item
         with self.props('draggable').classes('w-full cursor-pointer bg-grey-1').style('gap: 0.1rem'):
-            with ui.row().classes('w-full items-baseline'):
-                ui.label(item.title)
+            with ui.row().classes('w-full items-baseline').style('gap: 0.1rem'):
+                ui.label(item.title).classes('w-2/3 font-[Roboto] font-light')
                 ui.space()
+                if self.parent_slot.parent.name != 'Done':
+                    itemcolor='red' if int(item.due) < 0 else 'gray'
+                    item.due=item.due[1:] if item.due[0]=='-' else item.due
+                    ui.chip(item.due, color=itemcolor, removable=False).set_enabled(False)
+                    ui.space()
                 if item.duration>0:
                     with ui.icon('schedule', color='lime-400').classes('text-xl'):
                         ui.tooltip(f'Already consumed: {secsToHHMM(item.duration)}')    
-                with ui.button(icon='open_in_new', on_click=lambda: self.goToDetails(item.id)).props('flat').classes('text-xs'):
-                    ui.tooltip('View full task details')
-            with ui.row().classes('w-full items-baseline'):
+            with ui.row().classes('w-full items-baseline').style('gap: 0.1rem'):
                 ui.chip(item.tag, color=TAGS_COLORS[item.tag], text_color=TAGS_TEXT_COLORS[item.tag]).classes('text-xs')
                 ui.label(item.customer).classes('text-xs text-blue-600/75')
                 ui.space()
-                with ui.button(icon='delete', on_click=lambda: self.delCard(item.id)).props('flat').classes('text-xs'):
-                    ui.tooltip('Delete task')
+                if self.parent_slot.parent.name != 'Done':
+                    with ui.button(icon='delete', on_click=lambda: self.delCard(item.id)).props('flat').classes('text-xs'):
+                        ui.tooltip('Delete task')
+                with ui.button(icon='open_in_new', on_click=lambda: self.goToDetails(item.id)).props('flat').classes('text-xs'):
+                    ui.tooltip('View full task details')
         self.on('dragstart', self.handle_dragstart)
 
     def handle_dragstart(self) -> None:

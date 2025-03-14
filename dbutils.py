@@ -196,6 +196,7 @@ class Tasks:
         if updated_fields:
             params.append(task_id)
             query = f"UPDATE tasks SET {', '.join(updated_fields)} WHERE id = ?"
+            print(query)
             with self.connection:
                 self.connection.execute(query, params)
 
