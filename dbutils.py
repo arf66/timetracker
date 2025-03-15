@@ -152,14 +152,24 @@ class Tasks:
         cursor = self.connection.execute("SELECT * FROM tasks WHERE user=?", (user,))
         return cursor.fetchall()
     
-    def read_stats_by_tag(self, fromepoch, toepoch):
-        statement="SELECT SUM(duration) as value, tag as name FROM tasks WHERE ? <= end_time AND end_time < ? GROUP BY tag ORDER BY value DESC"
-        cursor = self.connection.execute(statement, (fromepoch, toepoch))
+    def read_stats_by_tag(self, fromepoch, toepoch, user=None):
+        if user is not None:
+            statement="SELECT SUM(duration) as value, tag as name FROM tasks WHERE ? <= end_time AND end_time < ? and user = ? GROUP BY tag ORDER BY value DESC"
+            parameters=(fromepoch, toepoch, user)
+        else:
+            statement="SELECT SUM(duration) as value, tag as name FROM tasks WHERE ? <= end_time AND end_time < ? GROUP BY tag ORDER BY value DESC"
+            parameters=(fromepoch, toepoch)
+        cursor = self.connection.execute(statement, parameters)
         return cursor.fetchall()
 
-    def read_stats_by_customer(self, fromepoch, toepoch):
-        statement="SELECT SUM(duration) as value, customer as name FROM tasks WHERE ? <= end_time AND end_time < ? GROUP BY customer ORDER BY value DESC"
-        cursor = self.connection.execute(statement, (fromepoch, toepoch))
+    def read_stats_by_customer(self, fromepoch, toepoch, user=None):
+        if user is not None:
+            statement="SELECT SUM(duration) as value, customer as name FROM tasks WHERE ? <= end_time AND end_time < ? and user = ? GROUP BY customer ORDER BY value DESC"
+            parameters=(fromepoch, toepoch, user)
+        else:
+            statement="SELECT SUM(duration) as value, customer as name FROM tasks WHERE ? <= end_time AND end_time < ? GROUP BY customer ORDER BY value DESC"
+            parameters=(fromepoch, toepoch)
+        cursor = self.connection.execute(statement, parameters)
         return cursor.fetchall()
 
 

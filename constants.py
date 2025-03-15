@@ -24,4 +24,4 @@ TAGS_TEXT_COLORS={
              'TRA':'black-600'}
 DATABASE='timetracker.db'
 DEBUG=False
-VERSION='0.6'
+VERSION='0.7'

@@ -17,7 +17,7 @@ def checkpwd(user, pwd):
     return dbutils.userDB.check_user(user, pwd)
 
 def logNavigate(path):
-#    print(path)
+    app.storage.user.update({'path': path})
     ui.navigate.to(path)
 
 def setBackgroud():
@@ -98,6 +98,8 @@ def getEpochRange(year: str, month: str):
     start_date = datetime.datetime(year, nummonth, 1)
     
     # Compute the end of the month by moving to the next month and subtracting one day
+    if len(month)==0:
+        nummonth=12
     if nummonth == 12:
         # If it's December, move to January of the next year
         end_date = datetime.datetime(year + 1, 1, 1) - datetime.timedelta(days=1)

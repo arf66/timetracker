@@ -3,7 +3,7 @@ from utility import logNavigate, setBackgroud, protectPage, getEpochRange
 from header import header
 from footer import footer
 import dbutils
-from constants import DATABASE, MONTHS, YEARS
+from constants import COLORS, MONTHS, YEARS
 from tasks import findTask, _tasks
 from customers import CustomersManager
  
@@ -19,7 +19,9 @@ def repoframe_page():
                 'tooltip': {'trigger': 'item'},
                 'legend': {'orient': 'vertical', 'left': 'right'},
                 'series': [
-                    {'name': title,'type': 'pie','radius': ['30%', '100%'],'avoidLabelOverlap': False,'padAngle': 5,
+                    {'name': title,'type': 'pie','radius': ['30%', '100%'],
+                        'left':'0%', 'top': '0%', 'right':'0%', 'bottom':'0%',
+                        'avoidLabelOverlap': False,'padAngle': 5,
                         'itemStyle': {'borderRadius': 10},'label': {'show': False,'position': 'center'},
                         'emphasis': {'label': {'show': True,'fontSize': 24,'fontWeight': 'bold'}},
                         'labelLine': {'show': True},
@@ -27,7 +29,8 @@ def repoframe_page():
                     }]
                 }
         if method=='create':
-            echart = ui.echart(options).classes('w-3/4')
+            echart = ui.echart(options)
+            echart.classes('h-full')
         else :
             CONTROLS[tab]['chart'].options['series'] = options['series']
             CONTROLS[tab]['chart'].update()
@@ -48,12 +51,15 @@ def repoframe_page():
 
     def refresh(mode):
         year=CONTROLS[mode]['toggles']['year'].value
-        month=MONTHS[CONTROLS[mode]['toggles']['month'].value]
+        if CONTROLS[mode]['toggles']['switch'].value:
+            month=MONTHS[CONTROLS[mode]['toggles']['month'].value]
+        else:
+            month=''
         (fromepoch, toepoch)=getEpochRange(year, month)
         if mode=='one':
-            dbdata=dbutils.taskDB.read_stats_by_customer(fromepoch, toepoch)
+            dbdata=dbutils.taskDB.read_stats_by_customer(fromepoch, toepoch, user=app.storage.user.get('username', ''))
         elif mode=='two':
-            dbdata=dbutils.taskDB.read_stats_by_tag(fromepoch, toepoch)
+            dbdata=dbutils.taskDB.read_stats_by_tag(fromepoch, toepoch, user=app.storage.user.get('username', ''))
         else:
             return
         
@@ -73,11 +79,13 @@ def repoframe_page():
         return
     
     header()
-    GEN_CLASSES='w-full h-full'
+    setBackgroud()
+    GEN_CLASSES=f'{COLORS['Ready']} w-full h-full'
     with ui.tabs().classes(GEN_CLASSES) as tabs:
         one = ui.tab('By Customers')
         two = ui.tab('By Tag')
-    with ui.tab_panels(tabs, value=one).classes(GEN_CLASSES):
+    with ui.tab_panels(tabs, value=one).classes(GEN_CLASSES) as tab_panels:
+        tab_panels.style('height: calc(100vh - 14rem)')
         with ui.tab_panel(one).classes(GEN_CLASSES):
             ui.label('Report by Customers')
             CONTROLS['one']={}
@@ -88,8 +96,4 @@ def repoframe_page():
             CONTROLS['two']={}
             CONTROLS['two']['toggles']=buildToggles()
             CONTROLS['two']['refresh']=ui.button('Refresh', on_click=lambda: refresh('two'))
-    ui.space()
-    with ui.row().classes('w-full'):
-        ui.space()
-        ui.button('Back', on_click=lambda: logNavigate('/kanban/'))
     footer()
