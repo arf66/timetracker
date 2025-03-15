@@ -1,5 +1,8 @@
 UI_STATUSES=['Ready', 'Doing', 'Done']
 DB_STATUSES=['Ready', 'Doing', 'Done', 'Deleted', 'Archived']
+YEARS=['2024', '2025']
+MONTHS={'Jan':'01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 
+        'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'}
 COLORS={'Ready': 'bg-gray-200 opacity-85', 
         'Doing': 'bg-lime-200 opacity-85', 
         'Done': 'bg-red-300 opacity-85'}
@@ -21,4 +24,4 @@ TAGS_TEXT_COLORS={
              'TRA':'black-600'}
 DATABASE='timetracker.db'
 DEBUG=False
-VERSION='0.5'
+VERSION='0.6'

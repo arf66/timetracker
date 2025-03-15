@@ -151,6 +151,18 @@ class Tasks:
     def read_all_tasks(self, user):
         cursor = self.connection.execute("SELECT * FROM tasks WHERE user=?", (user,))
         return cursor.fetchall()
+    
+    def read_stats_by_tag(self, fromepoch, toepoch):
+        statement="SELECT SUM(duration) as value, tag as name FROM tasks WHERE ? <= end_time AND end_time < ? GROUP BY tag ORDER BY value DESC"
+        cursor = self.connection.execute(statement, (fromepoch, toepoch))
+        return cursor.fetchall()
+
+    def read_stats_by_customer(self, fromepoch, toepoch):
+        statement="SELECT SUM(duration) as value, customer as name FROM tasks WHERE ? <= end_time AND end_time < ? GROUP BY customer ORDER BY value DESC"
+        cursor = self.connection.execute(statement, (fromepoch, toepoch))
+        return cursor.fetchall()
+
+
 
     def update_task(self, task_id, title=None, tag=None, customer=None, status=None, due_time=None, begin_time=None, 
                         last_begin_time=None, end_time=None, duration=None):
