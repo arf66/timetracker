@@ -1,5 +1,6 @@
 from nicegui import app,ui
-from utility import logNavigate, setBackgroud, protectPage, getEpochRange
+from utility import logNavigate, setBackgroud, protectPage, getEpochRange, \
+                        generate_date_range, get_period, fromEpochToDatetime
 from header import header
 from footer import footer
 import dbutils
@@ -15,8 +16,21 @@ def repoframe_page():
 
 
     def buildPie(data, title, tab, method):
+        def test():
+            return 'test'
+            pass
+
         options={
-                'tooltip': {'trigger': 'item'},
+                'tooltip': {'trigger': 'item',
+                            ':formatter': """
+                                function (params) {
+                                    const seconds = params.value;
+                                    const hours = Math.floor(seconds / 3600);
+                                    const minutes = Math.floor((seconds % 3600) / 60);
+                                    return `${params.name}: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                                    }
+                                    """
+                            },
                 'legend': {'orient': 'vertical', 'left': 'right'},
                 'series': [
                     {'name': title,'type': 'pie','radius': ['30%', '100%'],
@@ -56,15 +70,42 @@ def repoframe_page():
         else:
             month=''
         (fromepoch, toepoch)=getEpochRange(year, month)
+        if mode=='three':
+            (begin_date, end_date)= get_period(CONTROLS[mode]['toggles']['switch'].value, CONTROLS[mode]['toggles']['year'].value,
+                         MONTHS[CONTROLS[mode]['toggles']['month'].value] )
+            date_range=generate_date_range(begin_date, end_date)
         if mode=='one':
             dbdata=dbutils.taskDB.read_stats_by_customer(fromepoch, toepoch, user=app.storage.user.get('username', ''))
         elif mode=='two':
             dbdata=dbutils.taskDB.read_stats_by_tag(fromepoch, toepoch, user=app.storage.user.get('username', ''))
+        elif mode=='three':
+            dbdata=dbutils.taskDB.read_stats_by_day_month(fromepoch, toepoch, user=app.storage.user.get('username', ''))
         else:
             return
         
-        # Process dbdata to build the UI data structure
-        data=[{'value': el[0], 'name': el[1]} for el in dbdata]
+        if mode in ['one', 'two']:
+           # Process dbdata to build the UI data structure
+            data=[{'value': el[0], 'name': el[1]} for el in dbdata]
+
+        elif mode in ['three']:
+            if len(month):
+                # Process dbdata to build the UI data structure ( month case )
+                date_dict={}
+                for el in date_range:
+                    date_dict[el]=0
+                for el in dbdata:
+                    (date,_)=fromEpochToDatetime(el[1])
+                    date_dict[date]+=el[0]
+                data=[{'value': date_dict[el], 'name': el} for el in date_dict]
+            else:
+                # Process dbdata to build the UI data structure ( year case )
+                date_dict={}
+                for el in MONTHS:
+                    date_dict[year+'-'+MONTHS[el]]=0
+                for el in dbdata:
+                    (date,_)=fromEpochToDatetime(el[1])
+                    date_dict[date[:7]]+=el[0]
+                data=[{'value': date_dict[el], 'name': el} for el in date_dict]
 
         # remove previous chart if created
         if 'chart' in CONTROLS[mode]:
@@ -72,6 +113,7 @@ def repoframe_page():
         else:
             # build new chart
             CONTROLS[mode]['chart']=buildPie(data, 'Time spent on Customers', mode, 'create')
+
         return
 
     if protectPage(app.storage.user.get('authenticated', False)):
@@ -84,6 +126,7 @@ def repoframe_page():
     with ui.tabs().classes(GEN_CLASSES) as tabs:
         one = ui.tab('By Customers')
         two = ui.tab('By Tag')
+        three = ui.tab('By Day/Month')
     with ui.tab_panels(tabs, value=one).classes(GEN_CLASSES) as tab_panels:
         tab_panels.style('height: calc(100vh - 14rem)')
         with ui.tab_panel(one).classes(GEN_CLASSES):
@@ -96,4 +139,9 @@ def repoframe_page():
             CONTROLS['two']={}
             CONTROLS['two']['toggles']=buildToggles()
             CONTROLS['two']['refresh']=ui.button('Refresh', on_click=lambda: refresh('two'))
+        with ui.tab_panel(three).classes(GEN_CLASSES):
+            ui.label('Report by Day/Month')
+            CONTROLS['three']={}
+            CONTROLS['three']['toggles']=buildToggles()
+            CONTROLS['three']['refresh']=ui.button('Refresh', on_click=lambda: refresh('three'))
     footer()

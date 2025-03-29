@@ -2,7 +2,8 @@ from nicegui import app,ui
 import dbutils
 from constants import DB_STATUSES
 from tasks import _tasks
-import datetime
+from datetime import datetime, timedelta
+import calendar
 import time
 import pytz
 from json import load
@@ -57,13 +58,13 @@ def getEpochFromDateTime(date_string, timezone_str=None):
 
 def getToday():
     # Get the current date
-    today = datetime.datetime.today()
+    today = datetime.today()
     # Format the date in the desired format
     return today.strftime("%Y-%m-%d")
 
 def fromEpochToDatetime(epoch_time):
     # Convert epoch time to a datetime object
-    dt = datetime.datetime.fromtimestamp(epoch_time)
+    dt = datetime.fromtimestamp(epoch_time)
     
     # Format the date and time
     date_string = dt.strftime("%Y-%m-%d")
@@ -79,7 +80,7 @@ def daysDifference(due):
 
 def secsToHHMM(seconds):
     # Create a timedelta object from the given number of seconds
-    time_delta = datetime.timedelta(seconds=seconds)
+    time_delta = timedelta(seconds=seconds)
     
     # Extract hours and minutes
     total_seconds = int(time_delta.total_seconds())
@@ -95,17 +96,17 @@ def getEpochRange(year: str, month: str):
     nummonth = 1 if len(month)==0 else int(month)
     
     # Create datetime objects for the start and end of the month
-    start_date = datetime.datetime(year, nummonth, 1)
+    start_date = datetime(year, nummonth, 1)
     
     # Compute the end of the month by moving to the next month and subtracting one day
     if len(month)==0:
         nummonth=12
     if nummonth == 12:
         # If it's December, move to January of the next year
-        end_date = datetime.datetime(year + 1, 1, 1) - datetime.timedelta(days=1)
+        end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
     else:
         # Otherwise, move to the next month in the same year
-        end_date = datetime.datetime(year, nummonth + 1, 1) - datetime.timedelta(days=1)
+        end_date = datetime(year, nummonth + 1, 1) - timedelta(days=1)
 
     # Convert datetime objects to epoch timestamps
     start_epoch = int(time.mktime(start_date.timetuple()))
@@ -113,6 +114,39 @@ def getEpochRange(year: str, month: str):
 
     return start_epoch, end_epoch
 
+def generate_date_range(start_date, end_date):
+    # Convert the string dates to datetime objects
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.strptime(end_date, "%Y-%m-%d")
+    
+    # Initialize an empty list to hold the dates
+    date_list = []
+    
+    # Use a while loop to generate dates from start to end
+    current_date = start
+    while current_date <= end:
+        # Append the current date to the list after formatting it back to the desired string format
+        date_list.append(current_date.strftime("%Y-%m-%d"))
+        # Move to the next day
+        current_date += timedelta(days=1)
+    
+    return date_list
+
+def get_period(switch, year, month):
+    month=int(month)
+    year=int(year)
+    if switch:
+        # If switch is true, calculate the start and end dates for the specified month
+        start_date = f'{year:04d}-{month:02d}-01'
+        # Get the last day of the month
+        last_day = calendar.monthrange(year, month)[1]
+        end_date = f'{year:04d}-{month:02d}-{last_day:02d}'
+    else:
+        # If switch is false, calculate the start and end dates for the whole year
+        start_date = f'{year:04d}-01-01'
+        end_date = f'{year:04d}-12-31'
+    
+    return start_date, end_date
 
 def loadFromFile(user, file, tz):
     # load the data from the file

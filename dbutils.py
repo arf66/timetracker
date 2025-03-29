@@ -173,6 +173,15 @@ class Tasks:
         return cursor.fetchall()
 
 
+    def read_stats_by_day_month(self, fromepoch, toepoch, user=None):
+        if user is not None:
+            statement="SELECT duration as value, end_time as time FROM tasks WHERE ? <= end_time AND end_time < ? and user = ?"
+            parameters=(fromepoch, toepoch, user)
+        else:
+            statement="SELECT duration as value, end_time as time FROM tasks WHERE ? <= end_time AND end_time < ?"
+            parameters=(fromepoch, toepoch)
+        cursor = self.connection.execute(statement, parameters)
+        return cursor.fetchall()
 
     def update_task(self, task_id, title=None, tag=None, customer=None, status=None, due_time=None, begin_time=None, 
                         last_begin_time=None, end_time=None, duration=None):
