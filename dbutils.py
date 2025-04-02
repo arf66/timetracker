@@ -151,7 +151,11 @@ class Tasks:
     def read_all_tasks(self, user):
         cursor = self.connection.execute("SELECT * FROM tasks WHERE user=?", (user,))
         return cursor.fetchall()
-    
+
+    def read_all_active_tasks(self, user):
+        cursor = self.connection.execute("SELECT * FROM tasks WHERE user=? and status not in ('Deleted', 'Archived')", (user,))
+        return cursor.fetchall()
+
     def read_stats_by_tag(self, fromepoch, toepoch, user=None):
         if user is not None:
             statement="SELECT SUM(duration) as value, tag as name FROM tasks WHERE ? <= end_time AND end_time < ? and user = ? GROUP BY tag ORDER BY value DESC"
@@ -238,6 +242,11 @@ class Tasks:
     def delete_user_tasks(self, user):
         with self.connection:
             self.connection.execute("DELETE FROM tasks WHERE user = ?", (user,))
+
+    def delete_user_tasks_from_tuple(self, inlist):
+        with self.connection:
+            statement = f"DELETE FROM tasks WHERE id in {inlist}"
+            self.connection.execute(statement)
 
     def close_connection(self):
         """Close the database connection."""

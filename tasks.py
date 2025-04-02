@@ -1,6 +1,7 @@
 from constants import DB_STATUSES
 from copy import deepcopy
 from time import time
+from uuid import uuid4
 import dbutils
 
 _tasks={}
@@ -44,7 +45,7 @@ def initTasks(user):
 
     for el in DB_STATUSES:
         _tasks[user][el]=[]
-    retval = dbutils.taskDB.read_all_tasks(user)
+    retval = dbutils.taskDB.read_all_active_tasks(user)
     for el in retval:
         addTask(el[1], el[0], el[2], el[3], el[4], el[6], el[5], el[7], el[8], el[9], el[10], el[11])
 
@@ -53,6 +54,29 @@ def removeTask(user, id):
         for el in _tasks[user][s]:
             if el['id']==id:
                 _tasks[user][s].remove(el)
+                inlist=tuple([id,''])
+                dbutils.taskDB.delete_user_tasks_from_tuple(inlist)
+
+def duplicateTask(user, id):
+    for s in DB_STATUSES:
+        for el in _tasks[user][s]:
+            if el['id']==id:
+                newtask={
+                        'user': user,
+                        'id': uuid4().urn, 
+                        'title': el['title'], 
+                        'tag': el['tag'], 
+                        'customer': el['customer'], 
+                        'created': time(),
+                        'due_time': time()+86400,
+                        'begin_time': 0.0,
+                        'last_begin_time': 0.0,
+                        'end_time': 0.0,
+                        'duration': 0.0
+                        }
+                _tasks[user]['Ready'].append(newtask)
+                return newtask
+
 
 def moveTask(user, id, stat):
     for s in DB_STATUSES:

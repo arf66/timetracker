@@ -47,7 +47,7 @@ def details_page(id: str):
             last_begin_time = fromControlToValue(fields['last_begin_date'].value, fields['last_begin_time'].value)
             end_time = fromControlToValue(fields['end_date'].value, fields['end_time'].value)
             durstr= fields['duration'].value
-            duration=float(durstr[0:2])*60+float(durstr[3:])
+            duration=float(durstr[0:2])*60+float(durstr[3:2])
             
             # poi salvo i dati sul db
             

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Callable, Optional, Protocol
 
 from nicegui import app,ui
 from constants import COLORS, TAGS_COLORS, TAGS_TEXT_COLORS
-from tasks import moveTask, removeTask
-from utility import logNavigate, sync_db, secsToHHMM
+from tasks import moveTask, removeTask, duplicateTask
+from utility import logNavigate, sync_db, secsToHHMM, daysDifference
+from containers import UIContainers
 
 
 class Item(Protocol):
@@ -17,7 +19,19 @@ class Item(Protocol):
     due: str
 
 
+@dataclass
+class ToDo:
+    id: str
+    title: str
+    tag: str
+    status: str
+    customer: str
+    duration: int
+    due: str
+
+
 dragged: Optional[card] = None
+containers=UIContainers()
 
 
 class column(ui.scroll_area):
@@ -66,6 +80,13 @@ class card(ui.card):
         sync_db()
         logNavigate(f'/details/?id={id}')
 
+    def copyCard(self, id):
+        dup=duplicateTask(app.storage.user["username"], id)
+        with containers.get('Ready'):
+            due= str(daysDifference(dup['due_time']))
+            el = card(ToDo(dup['id'], dup['title'], dup['tag'], 'Ready', dup['customer'], dup['duration'], due))
+        
+
     def __init__(self, item: Item) -> None:
         super().__init__()
         self.item = item
@@ -87,7 +108,10 @@ class card(ui.card):
                 ui.space()
                 if self.parent_slot.parent.name != 'Done':
                     with ui.button(icon='delete', on_click=lambda: self.delCard(item.id)).props('flat').classes('text-xs'):
-                        ui.tooltip('Delete task')
+                        ui.tooltip('Delete task')                
+                if self.parent_slot.parent.name == 'Done':
+                    with ui.button(icon='content_copy', on_click=lambda: self.copyCard(item.id)).props('flat').classes('text-xs'):
+                        ui.tooltip('Duplicate task')
                 with ui.button(icon='open_in_new', on_click=lambda: self.goToDetails(item.id)).props('flat').classes('text-xs'):
                     ui.tooltip('View full task details')
         self.on('dragstart', self.handle_dragstart)

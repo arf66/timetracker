@@ -14,12 +14,30 @@ def repoframe_page():
 
     CONTROLS={}
 
+    def buildCalHeatMap(year, title, data, tab, method):
+        options = {
+            'title': { 'top': 30, 'left': 'center', 'text': title },
+            'tooltip': {},
+            'visualMap': { 'min': 0.0, 'max': 16.0, 'type': 'piecewise', 'orient': 'horizontal',
+                            'left': 'center', 'top': 65 },
+            'calendar': { 'top': 120, 'left': 30, 'right': 30, 'cellSize': ['auto', 40, 40],
+                            'range': year, 'itemStyle': { 'borderWidth': 0.5 },
+                            'yearLabel': { 'show': False }},
+            'series': { 'type': 'heatmap', 'coordinateSystem': 'calendar', 'data': data }
+            }
+        if method=='create':
+            echart = ui.echart(options)
+            echart.classes('h-full')
+        else :
+            # CONTROLS[tab]['chart'].options['series'] = options['series']
+            # CONTROLS[tab]['chart'].update()
+            CONTROLS[tab]['chart'].parent_slot.parent.remove(CONTROLS[tab]['chart'])
+            echart = ui.echart(options)
+            echart.classes('h-full')
+            CONTROLS[tab]['chart']=echart
+        return echart
 
     def buildPie(data, title, tab, method):
-        def test():
-            return 'test'
-            pass
-
         options={
                 'tooltip': {'trigger': 'item',
                             ':formatter': """
@@ -51,7 +69,7 @@ def repoframe_page():
             return None
         return echart
 
-    def buildToggles():
+    def buildToggles(onlyYears=False):
         elements={}
 
         with ui.column():
@@ -60,6 +78,9 @@ def repoframe_page():
                 elements['switch'] = ui.switch('Months')
                 elements['switch'].set_value(True)
             elements['month']=ui.toggle(MONTHS, value='Jan').bind_visibility_from(elements['switch'], 'value')
+        if onlyYears:
+            elements['switch'].set_value(False)
+            elements['switch'].set_visibility(False)
         return elements
 
 
@@ -70,15 +91,14 @@ def repoframe_page():
         else:
             month=''
         (fromepoch, toepoch)=getEpochRange(year, month)
-        if mode=='three':
-            (begin_date, end_date)= get_period(CONTROLS[mode]['toggles']['switch'].value, CONTROLS[mode]['toggles']['year'].value,
-                         MONTHS[CONTROLS[mode]['toggles']['month'].value] )
-            date_range=generate_date_range(begin_date, end_date)
         if mode=='one':
             dbdata=dbutils.taskDB.read_stats_by_customer(fromepoch, toepoch, user=app.storage.user.get('username', ''))
         elif mode=='two':
             dbdata=dbutils.taskDB.read_stats_by_tag(fromepoch, toepoch, user=app.storage.user.get('username', ''))
-        elif mode=='three':
+        elif mode in ['three', 'four']:
+            (begin_date, end_date)= get_period(CONTROLS[mode]['toggles']['switch'].value, CONTROLS[mode]['toggles']['year'].value,
+                         MONTHS[CONTROLS[mode]['toggles']['month'].value] )
+            date_range=generate_date_range(begin_date, end_date)
             dbdata=dbutils.taskDB.read_stats_by_day_month(fromepoch, toepoch, user=app.storage.user.get('username', ''))
         else:
             return
@@ -106,13 +126,31 @@ def repoframe_page():
                     (date,_)=fromEpochToDatetime(el[1])
                     date_dict[date[:7]]+=el[0]
                 data=[{'value': date_dict[el], 'name': el} for el in date_dict]
+        elif mode in ['four']:
+            # Process dbdata to build the UI data structure ( month case )
+            date_dict={}
+            for el in date_range:
+                date_dict[el]=0
+            for el in dbdata:
+                (date,_)=fromEpochToDatetime(el[1])
+                date_dict[date]+=el[0]
+            data=[[el, date_dict[el]/3600] for el in date_dict]
 
-        # remove previous chart if created
-        if 'chart' in CONTROLS[mode]:
-            buildPie(data, 'Time spent on Customers', mode, 'update')
+        if mode in ['one', 'two', 'three']:
+            # remove previous chart if created
+            if 'chart' in CONTROLS[mode]:
+                buildPie(data, 'Time spent on Customers', mode, 'update')
+            else:
+                # build new chart
+                CONTROLS[mode]['chart']=buildPie(data, 'Time spent on Customers', mode, 'create')
         else:
-            # build new chart
-            CONTROLS[mode]['chart']=buildPie(data, 'Time spent on Customers', mode, 'create')
+            # remove previous chart if created
+            if 'chart' in CONTROLS[mode]:
+                buildCalHeatMap(year, f'Time in {year}', data, mode, 'update')
+            else:
+                # build new chart
+                CONTROLS[mode]['chart']=buildCalHeatMap(year, f'Time in {year}', data, mode, 'create')
+
 
         return
 
@@ -127,6 +165,7 @@ def repoframe_page():
         one = ui.tab('By Customers')
         two = ui.tab('By Tag')
         three = ui.tab('By Day/Month')
+        four = ui.tab('Heatmap')
     with ui.tab_panels(tabs, value=one).classes(GEN_CLASSES) as tab_panels:
         tab_panels.style('height: calc(100vh - 14rem)')
         with ui.tab_panel(one).classes(GEN_CLASSES):
@@ -144,4 +183,9 @@ def repoframe_page():
             CONTROLS['three']={}
             CONTROLS['three']['toggles']=buildToggles()
             CONTROLS['three']['refresh']=ui.button('Refresh', on_click=lambda: refresh('three'))
+        with ui.tab_panel(four).classes(GEN_CLASSES):
+            ui.label('Heatmap')
+            CONTROLS['four']={}
+            CONTROLS['four']['toggles']=buildToggles(onlyYears=True)
+            CONTROLS['four']['refresh']=ui.button('Refresh', on_click=lambda: refresh('four'))
     footer()

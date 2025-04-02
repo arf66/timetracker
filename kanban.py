@@ -10,6 +10,7 @@ import tasks
 from uuid import uuid4
 from utility import setBackgroud, getEpochFromDateTime, protectPage, logNavigate, getToday, daysDifference
 from customers import CustomersManager
+from containers import UIContainers
 
 @ui.page('/kanban/')
 def kanban_page():
@@ -23,18 +24,11 @@ def kanban_page():
         duration: int
         due: str
 
-    containers=[]
+    containers=UIContainers()
     dbutils.taskDB = dbutils.Tasks(db_name=DATABASE, user=app.storage.user["username"])
     tasks.initTasks(app.storage.user["username"])
     custlist=CustomersManager()
     custlist.load(app.storage.user["username"], tasks._tasks)
-
-
-    def findContainer(n):
-        for i,e in enumerate(containers):
-            if e.name==n:
-                return i
-
 
     def clearFields(tit, tag, stat, cust, date):
         tit.value=''
@@ -47,7 +41,7 @@ def kanban_page():
         for s in UI_STATUSES:
             for el in tasks._tasks[app.storage.user['username']][s]:
                 due = str(daysDifference(el['due_time']))
-                with containers[findContainer(s)]:
+                with containers.get(s):
                     dnd.card(ToDo(el['id'], el['title'], el['tag'], s, el['customer'], el['duration'], due))
     
     def createTask(tit, tag, stat, cust, date):
@@ -72,7 +66,7 @@ def kanban_page():
         due_time =  getEpochFromDateTime(date.value +" 23:59:59")
         tasks.addTask(app.storage.user["username"], task_id, tit.value, tag.value, cust.value, stat.value, due_time)
 
-        with containers[findContainer(stat.value)]:
+        with containers.get(stat.value):
             due = str(daysDifference(due_time))
             dnd.card(ToDo(task_id, tit.value, tag.value, stat.value, cust.value, 0.0, due))
         custlist.add(cust.value)
@@ -88,12 +82,13 @@ def kanban_page():
     header()
     setBackgroud()
 
+    containers.init()
     with ui.splitter(horizontal=False, reverse=False, value=70).classes('w-full h-full') as splitter:
         with splitter.before:
             with ui.row().classes('w-full h-full'):
                 for i,e in enumerate(UI_STATUSES):
                     with dnd.column(e, on_drop=handle_drop) as el:
-                        containers.append(el)
+                        containers.add(e,el)
                     ui.space()             
         with splitter.after:
             with ui.card():

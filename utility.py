@@ -25,7 +25,12 @@ def setBackgroud():
         ui.query('body').classes(f"bg-[url(/static/background.jpg)] bg-cover")
 
 def sync_db() -> None:
-    dbutils.taskDB.delete_user_tasks(app.storage.user["username"])
+    inlist=[]
+    for s in DB_STATUSES:
+        for el in _tasks[app.storage.user["username"]][s]:
+            if el['user']==app.storage.user["username"]:
+                inlist.append(el['id'])
+    dbutils.taskDB.delete_user_tasks_from_tuple(tuple(inlist))
     for s in DB_STATUSES:
         for el in _tasks[app.storage.user["username"]][s]:
             if el['user']==app.storage.user["username"]:
@@ -86,9 +91,10 @@ def secsToHHMM(seconds):
     total_seconds = int(time_delta.total_seconds())
     hours, remainder = divmod(total_seconds, 3600)
     minutes = remainder // 60
+    secs = total_seconds -((hours*3600)+(minutes*60))
     
-    # Format the result as a string in '%H:%M'
-    return f"{hours:02}:{minutes:02}"
+    # Format the result as a string in '%H:%M:%S'
+    return f"{hours:02}:{minutes:02}:{secs:02}"
 
 def getEpochRange(year: str, month: str):
     # Convert input strings to integers
