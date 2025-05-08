@@ -76,6 +76,11 @@ class card(ui.card):
         self.parent_slot.parent.remove(self)
         removeTask(app.storage.user["username"], id)
 
+    def archiveCard(self, id):
+        self.parent_slot.parent.remove(self)
+        moveTask(app.storage.user["username"], id, 'Archived')
+
+
     def goToDetails(self, id):
         sync_db()
         logNavigate(f'/details/?id={id}')
@@ -110,6 +115,8 @@ class card(ui.card):
                     with ui.button(icon='delete', on_click=lambda: self.delCard(item.id)).props('flat').classes('text-xs'):
                         ui.tooltip('Delete task')                
                 if self.parent_slot.parent.name == 'Done':
+                    with ui.button(icon='delete', on_click=lambda: self.archiveCard(item.id)).props('flat').classes('text-xs'):
+                        ui.tooltip('Archive task')                
                     with ui.button(icon='content_copy', on_click=lambda: self.copyCard(item.id)).props('flat').classes('text-xs'):
                         ui.tooltip('Duplicate task')
                 with ui.button(icon='open_in_new', on_click=lambda: self.goToDetails(item.id)).props('flat').classes('text-xs'):

@@ -6,9 +6,11 @@ MONTHS={'Jan':'01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '
 COLORS={'Ready': 'bg-gray-200 opacity-85', 
         'Doing': 'bg-lime-200 opacity-85', 
         'Done': 'bg-red-300 opacity-85'}
-TAGS=['ADM', 'ENG', 'OPS', 'PRE', 'SAL', 'TRA', 'REG']
+TAGS=['ADM', 'ENG', 'DEV', 'QAT', 'OPS', 'PRE', 'SAL', 'TRA', 'REG']
 TAGS_COLORS={'ADM':'grey-100', 
              'ENG':'sky-100', 
+             'DEV':'sky-100', 
+             'QAT':'sky-100', 
              'OPS':'red-100', 
              'PRE':'green-100',
              'MKT': 'orange-100', 
@@ -18,6 +20,8 @@ TAGS_COLORS={'ADM':'grey-100',
 TAGS_TEXT_COLORS={
              'ADM':'black-600', 
              'ENG':'black-600', 
+             'DEV':'black-600', 
+             'QAT':'black-600', 
              'OPS':'black-600', 
              'PRE':'black-600', 
              'MKT':'black-600', 
@@ -26,4 +30,4 @@ TAGS_TEXT_COLORS={
              'REG': 'black-600'}
 DATABASE='timetracker.db'
 DEBUG=False
-VERSION='0.9'
+VERSION='0.10'
