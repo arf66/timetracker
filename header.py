@@ -6,6 +6,7 @@ def logout() -> None:
     logNavigate('/logout/')
 
 def gotoReports() -> None:
+    sync_db()
     logNavigate('/repoframe/')
 
 def gotoKanban() -> None:

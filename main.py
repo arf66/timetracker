@@ -35,4 +35,4 @@ if __name__ in {'__main__', '__mp_main__'}:
         app.add_static_files('/static', 'static')
         user.UserCollection=user.UserManager()
         dbutils.userDB = dbutils.TrelloDatabase(DATABASE)
-        ui.run(port=8011, storage_secret='!A1w2e3r4')
+        ui.run(port=8011, storage_secret='!A1w2e3r4', reload=False, title='Time Tracker', favicon="static/logo.png")

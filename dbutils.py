@@ -187,6 +187,16 @@ class Tasks:
         cursor = self.connection.execute(statement, parameters)
         return cursor.fetchall()
 
+    def read_completed_tasks(self, fromepoch, toepoch, user=None):
+        if user is not None:
+            statement="SELECT end_time, title, tag, customer, duration FROM tasks WHERE ? <= end_time AND end_time < ? and user = ? and status in ('Done', 'Archived') ORDER BY end_time"
+            parameters=(fromepoch, toepoch, user)
+        else:
+            statement="SELECT user, end_time, title, tag, customer, duration FROM tasks WHERE ? <= end_time AND end_time < ? and status='Done' ORDER BY end_time"
+            parameters=(fromepoch, toepoch)
+        cursor = self.connection.execute(statement, parameters)
+        return cursor.fetchall()
+
     def update_task(self, task_id, title=None, tag=None, customer=None, status=None, due_time=None, begin_time=None, 
                         last_begin_time=None, end_time=None, duration=None):
         updated_fields = []

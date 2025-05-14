@@ -69,7 +69,8 @@ def getToday():
 
 def fromEpochToDatetime(epoch_time):
     # Convert epoch time to a datetime object
-    dt = datetime.fromtimestamp(epoch_time)
+    time_zone = pytz.timezone(app.storage.user["defaulttz"])
+    dt = datetime.fromtimestamp(epoch_time, time_zone)
     
     # Format the date and time
     date_string = dt.strftime("%Y-%m-%d")

@@ -30,4 +30,4 @@ TAGS_TEXT_COLORS={
              'REG': 'black-600'}
 DATABASE='timetracker.db'
 DEBUG=False
-VERSION='0.10'
+VERSION='0.11'
