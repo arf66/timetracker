@@ -30,12 +30,12 @@ def kanban_page():
     custlist=CustomersManager()
     custlist.load(app.storage.user["username"], tasks._tasks)
 
-    def clearFields(tit, tag, stat, cust, date):
+    def clearFields(tit, tag, stat, cust, localdate):
         tit.value=''
         tag.value=''
         stat.value=''
         cust.value=''
-        date.value=getToday()
+        localdate.value=getToday()
 
     def createTaskUI():
         for s in UI_STATUSES:
@@ -44,7 +44,7 @@ def kanban_page():
                 with containers.get(s):
                     dnd.card(ToDo(el['id'], el['title'], el['tag'], s, el['customer'], el['duration'], due))
     
-    def createTask(tit, tag, stat, cust, date):
+    def createTask(tit, tag, stat, cust, localdate):
         def checkField(f,t):
             if f.value is None or len(f.value)==0:
                 ui.notify(t, type='warning')
@@ -59,11 +59,11 @@ def kanban_page():
             return
         if not checkField(stat, 'Missing Status'):
             return
-        if not checkField(date, 'Missing Due Date'):
+        if not checkField(localdate, 'Missing Due Date'):
             return
 
         task_id=uuid4().urn
-        due_time =  getEpochFromDateTime(date.value +" 23:59:59")
+        due_time =  getEpochFromDateTime(localdate.value +" 23:59:59")
         tasks.addTask(app.storage.user["username"], task_id, tit.value, tag.value, cust.value, stat.value, due_time)
 
         with containers.get(stat.value):

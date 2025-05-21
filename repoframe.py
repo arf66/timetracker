@@ -8,13 +8,35 @@ from constants import COLORS, MONTHS, YEARS
 from tasks import findTask, _tasks
 from customers import CustomersManager
 from datetime import datetime
-
+import os
+import tempfile
+import csv
  
 
 @ui.page('/repoframe/')
 def repoframe_page():
 
     CONTROLS={}
+
+    def export_table_to_csv():
+        # get the right structure of the data
+        header_names = [col['headerName'] for col in CONTROLS['five']['columns']]
+
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+            filename = tmp_file.name
+            # Write data to CSV
+            with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                # Write header
+                writer.writerow(header_names)
+                # Write rows
+                for row in CONTROLS['five']['rows']:
+                    writer.writerow( \
+                        [row['day'], row['task'], row['tag'], row['customer'], row['duration']])
+            # Trigger download in NiceGUI
+            ui.download.file(filename)
+
 
     def get_month_name_from_value(month_value):
         # Iterate over the dictionary items
@@ -93,13 +115,16 @@ def repoframe_page():
     
     def buildTableColumns():
         return [
-            {'headerName': 'Day', 'label': 'Day', 'field': 'day', 'required': True, 'align': 'left',
+            {'headerName': 'Day', 'label': 'Day', 'field': 'day', 'required': True, 'align': 'left', 
                 'minWidth': 70, 'maxWidth': 100},
             {'headerName': 'Task', 'label': 'Task', 'field': 'task', 'required': True, 'align': 'left', 'wrapHeaderText': True,
+                'filter': 'agTextColumnFilter', 'floatingFilter': True, 'filterParams': {'caseSensitive': False},
                 'minWidth': 40, 'maxWidth': 600},
             {'headerName': 'Tag', 'label': 'Tag', 'field': 'tag', 'required': True, 'align': 'left', 'wrapHeaderText': True,
+                'filter': 'agTextColumnFilter', 'floatingFilter': True, 'filterParams': {'caseSensitive': False},
                 'minWidth': 40, 'maxWidth': 100},
             {'headerName': 'Customer', 'label': 'Customer', 'field': 'customer', 'required': True, 'align': 'left', 'wrapHeaderText': True,
+                'filter': 'agTextColumnFilter', 'floatingFilter': True, 'filterParams': {'caseSensitive': False},
                 'minWidth': 40, 'maxWidth': 300},
             {'headerName': 'Duration', 'label': 'Duration', 'field': 'duration', 'required': True, 'align': 'right', 'wrapHeaderText': True,
                 'minWidth': 40, 'maxWidth': 100}
@@ -109,27 +134,39 @@ def repoframe_page():
 
         c= buildTableColumns()
         if method=='create':
-            table = ui.aggrid({
-                    'headerHeight': 40,
-                    'defaultColDef': {'flex': 1}, 
-                    'columnDefs': c,
-                    'rowData': data,
-                    }, auto_size_columns=True)
-            table.style('width: calc(60%);height: calc(90%)')
+            with ui.row().classes('w-full h-full') as rowcontainer:
+                CONTROLS[tab]['rowcontainer']=rowcontainer
+                table = ui.aggrid({
+                        'headerHeight': 40,
+                        'defaultColDef': {'flex': 1}, 
+                        'columnDefs': c,
+                        'rowData': data,
+                        }, auto_size_columns=True)
+                table.style('width: calc(60%);height: calc(90%)')
+                CONTROLS[tab]['download']=ui.button('Download', on_click=lambda: export_table_to_csv())
+                CONTROLS[tab]['columns']=c
+                CONTROLS[tab]['rows']=data
         else :
-            CONTROLS[tab]['chart'].parent_slot.parent.remove(CONTROLS[tab]['chart'])
-            table = ui.aggrid({
-                    'headerHeight': 40,
-                    'defaultColDef': {'flex': 1}, 
-                    'columnDefs': c,
-                    'rowData': data,
-                    }, auto_size_columns=True)
-            table.style('width: calc(60%);height: calc(90%)')
-            CONTROLS[tab]['chart']=table
+            CONTROLS[tab]['rowcontainer'].parent_slot.parent.remove(CONTROLS[tab]['rowcontainer'])            
+            with ui.row().classes('w-full h-full') as rowcontainer:
+                CONTROLS[tab]['chart'].parent_slot.parent.remove(CONTROLS[tab]['chart'])
+                CONTROLS[tab]['download'].parent_slot.parent.remove(CONTROLS[tab]['download'])            
+                CONTROLS[tab]['rowcontainer']=rowcontainer
+                table = ui.aggrid({
+                        'headerHeight': 40,
+                        'defaultColDef': {'flex': 1}, 
+                        'columnDefs': c,
+                        'rowData': data,
+                        }, auto_size_columns=True)
+                table.style('width: calc(60%);height: calc(90%)')
+                CONTROLS[tab]['chart']=table
+                CONTROLS[tab]['download']=ui.button('Download', on_click=lambda: export_table_to_csv())
+                CONTROLS[tab]['columns']=c
+                CONTROLS[tab]['rows']=data
         return table
 
 
-    def buildToggles(onlyYears=False):
+    def buildToggles(mode,onlyYears=False):
         year, month=get_current_year_and_month()
         elements={}
 
@@ -254,26 +291,27 @@ def repoframe_page():
         with ui.tab_panel(one).classes(GEN_CLASSES):
             ui.label('Report by Customers')
             CONTROLS['one']={}
-            CONTROLS['one']['toggles']=buildToggles()
+            CONTROLS['one']['toggles']=buildToggles('one')
             CONTROLS['one']['refresh']=ui.button('Refresh', on_click=lambda: refresh('one'))
         with ui.tab_panel(two).classes(GEN_CLASSES):
             ui.label('Report by Tag')
             CONTROLS['two']={}
-            CONTROLS['two']['toggles']=buildToggles()
+            CONTROLS['two']['toggles']=buildToggles('two')
             CONTROLS['two']['refresh']=ui.button('Refresh', on_click=lambda: refresh('two'))
         with ui.tab_panel(three).classes(GEN_CLASSES):
             ui.label('Report by Day/Month')
             CONTROLS['three']={}
-            CONTROLS['three']['toggles']=buildToggles()
+            CONTROLS['three']['toggles']=buildToggles('three')
             CONTROLS['three']['refresh']=ui.button('Refresh', on_click=lambda: refresh('three'))
         with ui.tab_panel(four).classes(GEN_CLASSES):
             ui.label('Heatmap')
             CONTROLS['four']={}
-            CONTROLS['four']['toggles']=buildToggles(onlyYears=True)
+            CONTROLS['four']['toggles']=buildToggles('four',onlyYears=True)
             CONTROLS['four']['refresh']=ui.button('Refresh', on_click=lambda: refresh('four'))
         with ui.tab_panel(five).classes(GEN_CLASSES):
             ui.label('Monthly Table')
             CONTROLS['five']={}
-            CONTROLS['five']['toggles']=buildToggles(onlyYears=False)
+            CONTROLS['five']['toggles']=buildToggles('five')
             CONTROLS['five']['refresh']=ui.button('Refresh', on_click=lambda: refresh('five'))
+                
     footer()

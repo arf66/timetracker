@@ -153,7 +153,7 @@ class Tasks:
         return cursor.fetchall()
 
     def read_all_active_tasks(self, user):
-        cursor = self.connection.execute("SELECT * FROM tasks WHERE user=? and status not in ('Deleted', 'Archived')", (user,))
+        cursor = self.connection.execute("SELECT id, user, title, tag, customer, created, status, due_time, begin_time, last_begin_time, end_time, duration FROM tasks WHERE user=? and status not in ('Deleted', 'Archived')", (user,))
         return cursor.fetchall()
 
     def read_stats_by_tag(self, fromepoch, toepoch, user=None):
@@ -255,7 +255,12 @@ class Tasks:
 
     def delete_user_tasks_from_tuple(self, inlist):
         with self.connection:
-            statement = f"DELETE FROM tasks WHERE id in {inlist}"
+            if len(inlist) == 0:
+                return
+            if len(inlist) == 1:
+                statement = f"DELETE FROM tasks WHERE id in ('{str(inlist[0])}')"
+            else:
+                statement = f"DELETE FROM tasks WHERE id in {inlist}"
             self.connection.execute(statement)
 
     def close_connection(self):

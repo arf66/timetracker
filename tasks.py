@@ -47,7 +47,8 @@ def initTasks(user):
         _tasks[user][el]=[]
     retval = dbutils.taskDB.read_all_active_tasks(user)
     for el in retval:
-        addTask(el[1], el[0], el[2], el[3], el[4], el[6], el[5], el[7], el[8], el[9], el[10], el[11])
+        #       user,  id,    title, tag,   customer, status, due_time, created,  begin_time, last_begin_time, end_time, duration
+        addTask(el[1], el[0], el[2], el[3], el[4],    el[6],   el[7],   el[5],    el[8], el[9], el[10], el[11])
 
 def removeTask(user, id):
     for s in DB_STATUSES:
