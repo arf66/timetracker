@@ -5,6 +5,7 @@ from logoutpage import page_logout
 from signuppage import signup_page
 from taskdetails import details_page
 from repoframe import repoframe_page
+from repoadmin import repoadmin_page
 
 def create():
     ui.page('/kanban/')(kanban_page)
@@ -13,3 +14,4 @@ def create():
     ui.page('/signup/')(signup_page)
     ui.page('/details/')(details_page)
     ui.page('/repoframe/')(repoframe_page)
+    ui.page('/repoadmin/')(repoadmin_page)

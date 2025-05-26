@@ -197,6 +197,10 @@ class Tasks:
         cursor = self.connection.execute(statement, parameters)
         return cursor.fetchall()
 
+    def read_summary_by_month_year(self, fromepoch, toepoch):
+        cursor = self.connection.execute("SELECT user, sum(duration) as total FROM tasks WHERE status in ('Done', 'Archived') AND ? <= end_time AND end_time < ? GROUP BY user ORDER BY total DESC", (fromepoch, toepoch))
+        return cursor.fetchall()
+
     def update_task(self, task_id, title=None, tag=None, customer=None, status=None, due_time=None, begin_time=None, 
                         last_begin_time=None, end_time=None, duration=None):
         updated_fields = []

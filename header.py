@@ -1,13 +1,14 @@
 from nicegui import app,ui
 from utility import sync_db, logNavigate
+from constants import ADMIN_ROLE
 
 def logout() -> None:
     sync_db()
     logNavigate('/logout/')
 
-def gotoReports() -> None:
+def gotoReports(dest) -> None:
     sync_db()
-    logNavigate('/repoframe/')
+    logNavigate(dest)
 
 def gotoKanban() -> None:
     logNavigate('/kanban/')
@@ -21,17 +22,23 @@ def header():
             ui.space()
             ui.label(f'Time Tracker').classes('text-slate-600 text-3xl font-[Roboto] font-bold')
             ui.space()
-            with ui.button(on_click=gotoReports, icon='article').classes('w-12').props('outline round') as btn:
+            if app.storage.user.get('role')==ADMIN_ROLE:
+                with ui.button(on_click=lambda: gotoReports('/repoadmin/'), icon='article', color='red').classes('w-12').props('outline round') as admbtn:
+                    ui.tooltip('Admin Reports')
+                    admbtn.set_visibility(app.storage.user.get('authenticated', False))
+                    if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/']:
+                        admbtn.set_visibility(False)
+            with ui.button(on_click=lambda: gotoReports('/repoframe/'), icon='article').classes('w-12').props('outline round') as btn:
                 ui.tooltip('Reports page')
                 btn.set_visibility(app.storage.user.get('authenticated', False))
-                if app.storage.user.get('path','')=='/repoframe/':
+                if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/']:
                     btn.set_visibility(False)
             with ui.button(on_click=sync_db, icon='sync').classes('w-12').props('outline round') as btn:
                 ui.tooltip('Synchronize to the DB')
                 btn.set_visibility(app.storage.user.get('authenticated', False))
-                if app.storage.user.get('path','')=='/repoframe/':
+                if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/']:
                     btn.set_visibility(False)
-            with ui.button(on_click=logout if app.storage.user.get('path', '') != '/repoframe/' else gotoKanban,
+            with ui.button(on_click=logout if app.storage.user.get('path', '') not in ['/repoadmin/', '/repoframe/'] else gotoKanban,
                             icon='logout').classes('w-12').props('outline round') as btn:
                 ui.tooltip('Logout from the session')
                 btn.set_visibility(app.storage.user.get('authenticated', False))

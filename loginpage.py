@@ -15,10 +15,11 @@ def login_page():
         if checkpwd(username.value, password.value):
             userdata = dbutils.userDB.get_user(username.value)
             defaulttz=userdata[3]
+            userrole=userdata[2]
             if not user.UserCollection.user_exists(username.value):
                 user.UserCollection.create_user(username.value, '')
             user.UserCollection.login(username.value)
-            app.storage.user.update({'username': username.value, 'defaulttz': defaulttz, 'authenticated': True})
+            app.storage.user.update({'username': username.value, 'defaulttz': defaulttz, 'role': userrole, 'authenticated': True})
         else:
             ui.notify('Wrong username or password', color='negative')
         if app.storage.user.get('authenticated', False):

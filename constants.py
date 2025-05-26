@@ -28,6 +28,8 @@ TAGS_TEXT_COLORS={
              'SAL':'black-600', 
              'TRA':'black-600',
              'REG': 'black-600'}
+ROLES=['User', 'Admin']
+ADMIN_ROLE='Admin'
 DATABASE='timetracker.db'
 DEBUG=False
-VERSION='0.12'
+VERSION='0.13'

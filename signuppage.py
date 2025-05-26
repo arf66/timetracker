@@ -1,5 +1,6 @@
 from nicegui import ui
 from utility import logNavigate, setBackgroud
+from constants import ROLES
 import dbutils
 import pytz
 
@@ -30,7 +31,9 @@ def try_saveuser(usr, pwd, role, utz):
 
 @ui.page('/signup/')
 def signup_page():
-    roles=['','User', 'Reports']
+    roles=['']
+    for el in ROLES:
+        roles.append(el)
     availtz=['']
     for el in timezones:
         availtz.append(el)
