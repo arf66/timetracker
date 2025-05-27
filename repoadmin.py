@@ -4,14 +4,30 @@ from utility import logNavigate, setBackgroud, protectPage, getEpochRange, \
 from header import header
 from footer import footer
 import dbutils
-from constants import COLORS, MONTHS, YEARS
+from constants import COLORS, MONTHS, YEARS, TAGS
 from tasks import findTask, _tasks
 from customers import CustomersManager
 from datetime import datetime
 import os
 import tempfile
 import csv
- 
+
+
+class ToggleButton(ui.button):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._state = False
+        self.on('click', self.toggle)
+
+    def toggle(self) -> None:
+        """Toggle the button state."""
+        self._state = not self._state
+        self.update()
+
+    def update(self) -> None:
+        self.props(f'color={"green" if self._state else "red"}')
+        super().update()
 
 @ui.page('/admin/')
 def repoadmin_page():
@@ -20,7 +36,7 @@ def repoadmin_page():
 
     def export_table_to_csv():
         # get the right structure of the data
-        header_names = [col['headerName'] for col in CONTROLS['five']['columns']]
+        header_names = [col['headerName'] for col in CONTROLS['two']['columns']]
 
         # Create a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
@@ -31,9 +47,9 @@ def repoadmin_page():
                 # Write header
                 writer.writerow(header_names)
                 # Write rows
-                for row in CONTROLS['five']['rows']:
+                for row in CONTROLS['two']['rows']:
                     writer.writerow( \
-                        [row['day'], row['task'], row['tag'], row['customer'], row['duration']])
+                        [row['User'], row['Tag'], row['Duration']])
             # Trigger download in NiceGUI
             ui.download.file(filename)
 
@@ -113,26 +129,21 @@ def repoadmin_page():
         return echart
 
     
-    def buildTableColumns():
+    def buildColumnsUserTag():
         return [
-            {'headerName': 'Day', 'label': 'Day', 'field': 'day', 'required': True, 'align': 'left', 
+            {'headerName': 'User', 'label': 'User', 'field': 'User', 'required': True, 'align': 'left', 
+                'filter': 'agTextColumnFilter', 'floatingFilter': True, 'filterParams': {'caseSensitive': False},                
                 'minWidth': 70, 'maxWidth': 100},
-            {'headerName': 'Task', 'label': 'Task', 'field': 'task', 'required': True, 'align': 'left', 'wrapHeaderText': True,
+            {'headerName': 'Tag', 'label': 'Tag', 'field': 'Tag', 'required': True, 'align': 'left', 'wrapHeaderText': True,
                 'filter': 'agTextColumnFilter', 'floatingFilter': True, 'filterParams': {'caseSensitive': False},
-                'minWidth': 40, 'maxWidth': 600},
-            {'headerName': 'Tag', 'label': 'Tag', 'field': 'tag', 'required': True, 'align': 'left', 'wrapHeaderText': True,
-                'filter': 'agTextColumnFilter', 'floatingFilter': True, 'filterParams': {'caseSensitive': False},
-                'minWidth': 40, 'maxWidth': 100},
-            {'headerName': 'Customer', 'label': 'Customer', 'field': 'customer', 'required': True, 'align': 'left', 'wrapHeaderText': True,
-                'filter': 'agTextColumnFilter', 'floatingFilter': True, 'filterParams': {'caseSensitive': False},
-                'minWidth': 40, 'maxWidth': 300},
-            {'headerName': 'Duration', 'label': 'Duration', 'field': 'duration', 'required': True, 'align': 'right', 'wrapHeaderText': True,
-                'minWidth': 40, 'maxWidth': 100}
+                'minWidth': 70, 'maxWidth': 100},
+            {'headerName': 'Duration', 'label': 'Duration', 'field': 'Duration', 'required': True, 'align': 'right', 'wrapHeaderText': True,
+                'minWidth': 70, 'maxWidth': 100}
         ]
     
-    def buildTable(data, title, tab, method):
+    def buildTableUserTags(data, title, tab, method):
 
-        c= buildTableColumns()
+        c= buildColumnsUserTag()
         if method=='create':
             with ui.row().classes('w-full h-full') as rowcontainer:
                 CONTROLS[tab]['rowcontainer']=rowcontainer
@@ -142,7 +153,7 @@ def repoadmin_page():
                         'columnDefs': c,
                         'rowData': data,
                         }, auto_size_columns=True)
-                table.style('width: calc(60%);height: calc(90%)')
+                table.style('width: calc(30%);height: calc(90%)')
                 CONTROLS[tab]['download']=ui.button('Download', on_click=lambda: export_table_to_csv())
                 CONTROLS[tab]['columns']=c
                 CONTROLS[tab]['rows']=data
@@ -158,7 +169,7 @@ def repoadmin_page():
                         'columnDefs': c,
                         'rowData': data,
                         }, auto_size_columns=True)
-                table.style('width: calc(60%);height: calc(90%)')
+                table.style('width: calc(30%);height: calc(90%)')
                 CONTROLS[tab]['chart']=table
                 CONTROLS[tab]['download']=ui.button('Download', on_click=lambda: export_table_to_csv())
                 CONTROLS[tab]['columns']=c
@@ -166,7 +177,7 @@ def repoadmin_page():
         return table
 
 
-    def buildToggles(mode,onlyYears=False):
+    def buildToggles(mode,onlyYears=False, withTags=False):
         year, month=get_current_year_and_month()
         elements={}
 
@@ -179,6 +190,11 @@ def repoadmin_page():
         if onlyYears:
             elements['switch'].set_value(False)
             elements['switch'].set_visibility(False)
+        if withTags:
+            with ui.row():
+                elements['tags']=[]
+                for t in TAGS:
+                    elements['tags'].append(ToggleButton(t))
         return elements
 
 
@@ -192,82 +208,46 @@ def repoadmin_page():
         if mode=='one':
             dbdata=dbutils.taskDB.read_summary_by_month_year(fromepoch, toepoch)
         elif mode=='two':
-            dbdata=dbutils.taskDB.read_stats_by_tag(fromepoch, toepoch, user=app.storage.user.get('username', ''))
-        elif mode in ['three', 'four']:
-            (begin_date, end_date)= get_period(CONTROLS[mode]['toggles']['switch'].value, CONTROLS[mode]['toggles']['year'].value,
-                         MONTHS[CONTROLS[mode]['toggles']['month'].value] )
-            date_range=generate_date_range(begin_date, end_date)
-            dbdata=dbutils.taskDB.read_stats_by_day_month(fromepoch, toepoch, user=app.storage.user.get('username', ''))
-        elif mode=='five':
-            dbdata=dbutils.taskDB.read_completed_tasks(fromepoch, toepoch, user=app.storage.user.get('username', ''))
+            # First collect the tags
+            select=[]
+            for i,t in enumerate(TAGS):
+                if CONTROLS[mode]['toggles']['tags'][i]._state:
+                    select.append(CONTROLS[mode]['toggles']['tags'][i].text)
+            if len(select)==0:
+                return
+            else:
+                dbdata=dbutils.taskDB.read_stats_by_user_activity(fromepoch, toepoch, select)
         else:
             return
         
-        if mode in ['one', 'two']:
+        if mode in ['one']:
            # Process dbdata to build the UI data structure
             data=[{'value': el[1], 'name': el[0]} for el in dbdata]
-        elif mode in ['three']:
-            if len(month):
-                # Process dbdata to build the UI data structure ( month case )
-                date_dict={}
-                for el in date_range:
-                    date_dict[el]=0
-                for el in dbdata:
-                    (date,_)=fromEpochToDatetime(el[1])
-                    date_dict[date]+=el[0]
-                data=[{'value': date_dict[el], 'name': el} for el in date_dict]
-            else:
-                # Process dbdata to build the UI data structure ( year case )
-                date_dict={}
-                for el in MONTHS:
-                    date_dict[year+'-'+MONTHS[el]]=0
-                for el in dbdata:
-                    (date,_)=fromEpochToDatetime(el[1])
-                    date_dict[date[:7]]+=el[0]
-                data=[{'value': date_dict[el], 'name': el} for el in date_dict]
-        elif mode in ['four']:
-            # Process dbdata to build the UI data structure ( month case )
-            date_dict={}
-            for el in date_range:
-                date_dict[el]=0
-            for el in dbdata:
-                (date,_)=fromEpochToDatetime(el[1])
-                date_dict[date]+=el[0]
-            data=[[el, date_dict[el]/3600] for el in date_dict]
-        elif mode in ['five']:
-            # Process dbdata to build the task table
+        elif mode in ['two']:
+           # Process dbdata to build the table structure
             data=[]
             for el in dbdata:
                 newrow={}
-                (day,_)=fromEpochToDatetime(el[0])
-                newrow['day']=day
-                newrow['task']=el[1]
-                newrow['tag']=el[2]
-                newrow['customer']=el[3]
-                newrow['duration']=secsToHHMM(el[4])
+                newrow['User']=el[0]
+                newrow['Tag']=el[1]
+                newrow['Duration']=secsToHHMM(el[2])
                 data.append(newrow)
 
-        if mode in ['one', 'two', 'three']:
+
+        if mode in ['one']:
             # remove previous chart if created
             if 'chart' in CONTROLS[mode]:
                 buildPie(data, 'Hours by User', mode, 'update')
             else:
                 # build new chart
                 CONTROLS[mode]['chart']=buildPie(data, 'Hours by User', mode, 'create')
-        elif mode in ['four']:
+        elif mode in ['two']:  
             # remove previous chart if created
             if 'chart' in CONTROLS[mode]:
-                buildCalHeatMap(year, f'Time in {year}', data, mode, 'update')
+                buildTableUserTags(data, 'Hours by User/Activity', mode, 'update')
             else:
                 # build new chart
-                CONTROLS[mode]['chart']=buildCalHeatMap(year, f'Time in {year}', data, mode, 'create')
-        elif mode in ['five']:
-            # remove previous table if created
-            if 'chart' in CONTROLS[mode]:
-                buildTable(data, 'Full time report', mode, 'update')
-            else:
-                # build new table
-                CONTROLS[mode]['chart']=buildTable(data, 'Full time report', mode, 'create')
+                CONTROLS[mode]['chart']=buildTableUserTags(data, 'Hours by User/Activity', mode, 'create')  
         else:
             return
 
@@ -282,6 +262,7 @@ def repoadmin_page():
     GEN_CLASSES=f'{COLORS['Ready']} w-full h-full'
     with ui.tabs().classes(GEN_CLASSES) as tabs:
         one = ui.tab('By Month/Year')
+        two = ui.tab('By User/Activity')
     with ui.tab_panels(tabs, value=one).classes(GEN_CLASSES) as tab_panels:
         tab_panels.style('height: calc(100vh - 14rem)')
         with ui.tab_panel(one).classes(GEN_CLASSES):
@@ -289,5 +270,10 @@ def repoadmin_page():
             CONTROLS['one']={}
             CONTROLS['one']['toggles']=buildToggles('one')
             CONTROLS['one']['refresh']=ui.button('Refresh', on_click=lambda: refresh('one'))
+        with ui.tab_panel(two).classes(GEN_CLASSES):
+            ui.label('Report by User/Activity')
+            CONTROLS['two']={}
+            CONTROLS['two']['toggles']=buildToggles('one', withTags=True)
+            CONTROLS['two']['refresh']=ui.button('Refresh', on_click=lambda: refresh('two'))
                 
     footer()
