@@ -24,7 +24,7 @@ def kanban_page():
         duration: int
         due: str
 
-    containers=UIContainers()
+    containers=UIContainers(app.storage.user["username"])
     dbutils.taskDB = dbutils.Tasks(db_name=DATABASE, user=app.storage.user["username"])
     tasks.initTasks(app.storage.user["username"])
     custlist=CustomersManager()
@@ -41,7 +41,7 @@ def kanban_page():
         for s in UI_STATUSES:
             for el in tasks._tasks[app.storage.user['username']][s]:
                 due = str(daysDifference(el['due_time']))
-                with containers.get(s):
+                with containers.get(s, app.storage.user["username"]):
                     dnd.card(ToDo(el['id'], el['title'], el['tag'], s, el['customer'], el['duration'], due))
     
     def createTask(tit, tag, stat, cust, localdate):
@@ -66,7 +66,7 @@ def kanban_page():
         due_time =  getEpochFromDateTime(localdate.value +" 23:59:59")
         tasks.addTask(app.storage.user["username"], task_id, tit.value, tag.value, cust.value, stat.value, due_time)
 
-        with containers.get(stat.value):
+        with containers.get(stat.value, app.storage.user["username"]):
             due = str(daysDifference(due_time))
             dnd.card(ToDo(task_id, tit.value, tag.value, stat.value, cust.value, 0.0, due))
         custlist.add(cust.value)
@@ -82,13 +82,13 @@ def kanban_page():
     header()
     setBackgroud()
 
-    containers.init()
+    containers.init(app.storage.user["username"])
     with ui.splitter(horizontal=False, reverse=False, value=70).classes('w-full h-full') as splitter:
         with splitter.before:
             with ui.row().classes('w-full h-full'):
                 for i,e in enumerate(UI_STATUSES):
                     with dnd.column(e, on_drop=handle_drop) as el:
-                        containers.add(e,el)
+                        containers.add(e,el, app.storage.user["username"])
                     ui.space()             
         with splitter.after:
             with ui.card():

@@ -32,4 +32,4 @@ ROLES=['User', 'Admin']
 ADMIN_ROLE='Admin'
 DATABASE='timetracker.db'
 DEBUG=False
-VERSION='0.14'
+VERSION='0.15'

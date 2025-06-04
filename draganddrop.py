@@ -31,7 +31,6 @@ class ToDo:
 
 
 dragged: Optional[card] = None
-containers=UIContainers()
 
 
 class column(ui.scroll_area):
@@ -87,7 +86,8 @@ class card(ui.card):
 
     def copyCard(self, id):
         dup=duplicateTask(app.storage.user["username"], id)
-        with containers.get('Ready'):
+        containers=UIContainers(app.storage.user["username"])
+        with containers.get('Ready', app.storage.user["username"]):
             due= str(daysDifference(dup['due_time']))
             el = card(ToDo(dup['id'], dup['title'], dup['tag'], 'Ready', dup['customer'], dup['duration'], due))
         
