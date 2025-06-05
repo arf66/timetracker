@@ -17,7 +17,7 @@ class ToggleButton(ui.button):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._state = False
+        self._state = True
         self.on('click', self.toggle)
 
     def toggle(self) -> None:

@@ -47,7 +47,7 @@ def details_page(id: str):
             last_begin_time = fromControlToValue(fields['last_begin_date'].value, fields['last_begin_time'].value)
             end_time = fromControlToValue(fields['end_date'].value, fields['end_time'].value)
             durstr= fields['duration'].value
-            duration=float(durstr[0:2])*60+float(durstr[3:2])
+            duration=float(durstr[0:2])*3600+float(durstr[3:5])*60+float(durstr[6:8])
             
             # poi salvo i dati sul db
             
@@ -138,7 +138,7 @@ def details_page(id: str):
         fields['duration'] = cardField('Duration', task['duration'], type='Duration')
 
         with ui.row().classes('w-full'):
-            ui.button('Cancel', on_click=lambda: exitDetails()).props('flat')
+            ui.button('Back', on_click=lambda: exitDetails()).props('flat')
             ui.space()
             btnEdit['ui']=ui.button(btnEdit['mode'], on_click=lambda: editViewMode()).props('flat')
             btnEdit['ui'].enabled=(taskstatus!='Done')
