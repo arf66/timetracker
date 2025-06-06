@@ -23,22 +23,27 @@ def header():
             ui.label(f'Time Tracker').classes('text-slate-600 text-3xl font-[Roboto] font-bold')
             ui.space()
             if app.storage.user.get('role')==ADMIN_ROLE:
+                with ui.button(on_click=lambda: logNavigate('/usermgr/'), icon='manage_accounts', color='red').classes('w-12').props('outline round') as usrbtn:
+                    ui.tooltip('User Management')
+                    usrbtn.set_visibility(app.storage.user.get('authenticated', False))
+                    if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/', '/usermgr/']:
+                        usrbtn.set_visibility(False)
                 with ui.button(on_click=lambda: gotoReports('/repoadmin/'), icon='article', color='red').classes('w-12').props('outline round') as admbtn:
                     ui.tooltip('Admin Reports')
                     admbtn.set_visibility(app.storage.user.get('authenticated', False))
-                    if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/']:
+                    if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/', '/usermgr/']:
                         admbtn.set_visibility(False)
             with ui.button(on_click=lambda: gotoReports('/repoframe/'), icon='article').classes('w-12').props('outline round') as btn:
                 ui.tooltip('Reports page')
                 btn.set_visibility(app.storage.user.get('authenticated', False))
-                if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/']:
+                if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/', '/usermgr/']:
                     btn.set_visibility(False)
             with ui.button(on_click=sync_db, icon='sync').classes('w-12').props('outline round') as btn:
                 ui.tooltip('Synchronize to the DB')
                 btn.set_visibility(app.storage.user.get('authenticated', False))
-                if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/']:
+                if app.storage.user.get('path','') in ['/repoadmin/', '/repoframe/', '/usermgr/']:
                     btn.set_visibility(False)
-            with ui.button(on_click=logout if app.storage.user.get('path', '') not in ['/repoadmin/', '/repoframe/'] else gotoKanban,
+            with ui.button(on_click=logout if app.storage.user.get('path', '') not in ['/repoadmin/', '/repoframe/', '/usermgr/'] else gotoKanban,
                             icon='logout').classes('w-12').props('outline round') as btn:
                 ui.tooltip('Logout from the session')
                 btn.set_visibility(app.storage.user.get('authenticated', False))

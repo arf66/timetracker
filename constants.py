@@ -29,7 +29,9 @@ TAGS_TEXT_COLORS={
              'TRA':'black-600',
              'REG': 'black-600'}
 ROLES=['User', 'Admin']
+DEFAULT_ROLE='User'
 ADMIN_ROLE='Admin'
 DATABASE='timetracker.db'
+DEFAULT_TZ='CET'
 DEBUG=False
-VERSION='0.16'
+VERSION='0.17'

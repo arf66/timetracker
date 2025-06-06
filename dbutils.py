@@ -61,6 +61,17 @@ class TrelloDatabase:
         except Error as e:
             debugprint(f"Error fetching user: {e}")
             return None
+        
+    def read_all_users(self):
+        """Fetch all users from the users table."""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM users ORDER BY username")
+            users = cursor.fetchall()
+            return users
+        except Error as e:
+            debugprint(f"Error fetching users: {e}")
+            return None 
 
     def update_user(self, username, password=None, role=None):
         """Update a user's password and/or role."""
@@ -155,6 +166,10 @@ class Tasks:
     def read_all_active_tasks(self, user):
         cursor = self.connection.execute("SELECT id, user, title, tag, customer, created, status, due_time, begin_time, last_begin_time, end_time, duration FROM tasks WHERE user=? and status not in ('Deleted', 'Archived')", (user,))
         return cursor.fetchall()
+    
+    def read_all_users(self):
+        cursor = self.connection.execute("SELECT DISTINCT user FROM tasks")
+        return [row[0] for row in cursor.fetchall()]
 
     def read_stats_by_tag(self, fromepoch, toepoch, user=None):
         if user is not None:
@@ -206,54 +221,10 @@ class Tasks:
         cursor = self.connection.execute(f"SELECT user, tag, sum(duration) as total FROM tasks WHERE status in ('Done', 'Archived') AND {fromepoch} <= end_time AND end_time < {toepoch} AND tag in ({placeholders}) GROUP BY user, tag", tagslist)
         return cursor.fetchall()
 
-
-    def update_task(self, task_id, title=None, tag=None, customer=None, status=None, due_time=None, begin_time=None, 
-                        last_begin_time=None, end_time=None, duration=None):
-        updated_fields = []
-        params = []
-        
-        if title is not None:
-            updated_fields.append("title = ?")
-            params.append(title)
-        
-        if tag is not None:
-            updated_fields.append("tag = ?")
-            params.append(tag)
-        
-        if customer is not None:
-            updated_fields.append("customer = ?")
-            params.append(customer)
-
-        if status is not None:
-            updated_fields.append("status = ?")
-            params.append(status)
-
-        if due_time is not None:
-            updated_fields.append("due_time = ?")
-            params.append(due_time)
-
-        if begin_time is not None:
-            updated_fields.append("begin_time = ?")
-            params.append(begin_time)
-
-        if last_begin_time is not None:
-            updated_fields.append("last_begin_time = ?")
-            params.append(last_begin_time)
-
-        if end_time is not None:
-            updated_fields.append("end_time = ?")
-            params.append(end_time)
-
-        if duration is not None:
-            updated_fields.append("duration = ?")
-            params.append(duration)
-
-        if updated_fields:
-            params.append(task_id)
-            query = f"UPDATE tasks SET {', '.join(updated_fields)} WHERE id = ?"
-            print(query)
-            with self.connection:
-                self.connection.execute(query, params)
+    def read_stats_by_user_month(self, fromepoch, toepoch, userlist):
+        placeholders = ','.join(['?'] * len(userlist))
+        cursor = self.connection.execute(f"SELECT user, end_time, title, tag, customer, duration FROM tasks WHERE status in ('Done', 'Archived') AND {fromepoch} <= end_time AND end_time < {toepoch} AND user in ({placeholders}) ORDER BY user, end_time", userlist)
+        return cursor.fetchall()
 
     def delete_task(self, task_id):
         with self.connection:

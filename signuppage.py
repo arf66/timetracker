@@ -1,6 +1,6 @@
 from nicegui import ui
 from utility import logNavigate, setBackgroud
-from constants import ROLES
+from constants import DEFAULT_ROLE
 import dbutils
 import pytz
 
@@ -19,8 +19,6 @@ def try_saveuser(usr, pwd, role, utz):
         return
     if not checkField(pwd, 'Missing Password'):
         return
-    if not checkField(role, 'Missing Role'):
-        return
     if not checkField(utz, 'Missing User Timezone'):
         return
 
@@ -31,9 +29,6 @@ def try_saveuser(usr, pwd, role, utz):
 
 @ui.page('/signup/')
 def signup_page():
-    roles=['']
-    for el in ROLES:
-        roles.append(el)
     availtz=['']
     for el in timezones:
         availtz.append(el)
@@ -42,7 +37,7 @@ def signup_page():
     with ui.card().classes('size-96 absolute-center'):
         username = ui.input('Username').classes('w-full')
         password = ui.input('Password', password=True, password_toggle_button=True).classes('w-full')
-        role = ui.select( roles, label='Role',value='').classes('w-full')
+        role = DEFAULT_ROLE
         usertz = ui.select( availtz, label='Timezone',value='').classes('w-full')
         ui.space()
         with ui.row().classes('w-full'):
