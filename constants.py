@@ -34,4 +34,4 @@ ADMIN_ROLE='Admin'
 DATABASE='timetracker.db'
 DEFAULT_TZ='CET'
 DEBUG=False
-VERSION='0.17'
+VERSION='0.18'

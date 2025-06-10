@@ -4,7 +4,7 @@ from utility import logNavigate, setBackgroud, protectPage, \
 from header import header
 from footer import footer
 import dbutils
-from constants import DATABASE
+from constants import DATABASE, ADMIN_ROLE
 from tasks import findTask, _tasks
 from customers import CustomersManager
  
@@ -141,5 +141,5 @@ def details_page(id: str):
             ui.button('Back', on_click=lambda: exitDetails()).props('flat')
             ui.space()
             btnEdit['ui']=ui.button(btnEdit['mode'], on_click=lambda: editViewMode()).props('flat')
-            btnEdit['ui'].enabled=(taskstatus!='Done')
+            btnEdit['ui'].enabled=(taskstatus!='Done') or (app.storage.user['role']==ADMIN_ROLE)
     footer()

@@ -58,7 +58,7 @@ def usermgr_page():
         'rowSelection': 'multiple',
         'stopEditingWhenCellsLoseFocus': True,
     }).on('cellValueChanged', handle_cell_value_change)
-    aggrid.style('width: calc(30%);')
+    aggrid.style('width: calc(30%); fontSize: 20px')
 
     ui.button('Delete selected', on_click=delete_selected)
     ui.button('New row', on_click=add_row)
