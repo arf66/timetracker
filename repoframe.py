@@ -75,12 +75,11 @@ def repoframe_page():
             echart = ui.echart(options)
             echart.classes('h-full')
         else :
-            # CONTROLS[tab]['chart'].options['series'] = options['series']
-            # CONTROLS[tab]['chart'].update()
             CONTROLS[tab]['chart'].parent_slot.parent.remove(CONTROLS[tab]['chart'])
             echart = ui.echart(options)
             echart.classes('h-full')
             CONTROLS[tab]['chart']=echart
+            return None
         return echart
 
     def buildPie(data, title, tab, method):
@@ -146,27 +145,18 @@ def repoframe_page():
                         'rowData': data,
                         }, auto_size_columns=True)
                 table.style('width: calc(60%);height: calc(90%)')
-                CONTROLS[tab]['download']=ui.button('Download', on_click=lambda: export_table_to_csv())
-                CONTROLS[tab]['columns']=c
-                CONTROLS[tab]['rows']=data
-        else :
-            CONTROLS[tab]['rowcontainer'].parent_slot.parent.remove(CONTROLS[tab]['rowcontainer'])            
-            with ui.row().classes('w-full h-full') as rowcontainer:
-                CONTROLS[tab]['chart'].parent_slot.parent.remove(CONTROLS[tab]['chart'])
-                CONTROLS[tab]['download'].parent_slot.parent.remove(CONTROLS[tab]['download'])            
-                CONTROLS[tab]['rowcontainer']=rowcontainer
-                table = ui.aggrid({
-                        'headerHeight': 40,
-                        'defaultColDef': {'flex': 1}, 
-                        'columnDefs': c,
-                        'rowData': data,
-                        }, auto_size_columns=True)
-                table.style('width: calc(60%);height: calc(90%)')
                 CONTROLS[tab]['chart']=table
                 CONTROLS[tab]['download']=ui.button('Download', on_click=lambda: export_table_to_csv())
                 CONTROLS[tab]['columns']=c
                 CONTROLS[tab]['rows']=data
-        return table
+                return table
+        else :
+            CONTROLS[tab]['chart'].options['columnDefs'] = c
+            CONTROLS[tab]['chart'].options['rowData'] = data
+            CONTROLS[tab]['chart'].update()
+            CONTROLS[tab]['columns']=c
+            CONTROLS[tab]['rows']=data
+            return None
 
 
     def buildToggles(mode,onlyYears=False):
@@ -174,11 +164,18 @@ def repoframe_page():
         elements={}
 
         with ui.column():
-            with ui.row():
-                elements['year']=ui.toggle(YEARS, value=year)
-                elements['switch'] = ui.switch('Months')
-                elements['switch'].set_value(True)
-            elements['month']=ui.toggle(MONTHS, value=get_month_name_from_value(month)).bind_visibility_from(elements['switch'], 'value')
+            if mode in ['one', 'two', 'three', 'five']:
+                with ui.row():
+                    elements['year']=ui.toggle(YEARS, value=year, on_change=lambda: refresh(mode))
+                    elements['switch'] = ui.switch('Months', on_change=lambda: refresh(mode))
+                    elements['switch'].set_value(True)
+                elements['month']=ui.toggle(MONTHS, value=get_month_name_from_value(month), on_change=lambda: refresh(mode)).bind_visibility_from(elements['switch'], 'value')
+            elif mode in ['four']:
+                with ui.row():
+                    elements['year']=ui.toggle(YEARS, value=year)
+                    elements['switch'] = ui.switch('Years')
+                    elements['switch'].set_value(True)
+                elements['month']=ui.toggle(MONTHS, value=get_month_name_from_value(month)).bind_visibility_from(elements['switch'], 'value')
         if onlyYears:
             elements['switch'].set_value(False)
             elements['switch'].set_visibility(False)
@@ -186,6 +183,8 @@ def repoframe_page():
 
 
     def refresh(mode):
+        if 'toggles' not in CONTROLS[mode]:
+            return
         year=CONTROLS[mode]['toggles']['year'].value
         if CONTROLS[mode]['toggles']['switch'].value:
             month=MONTHS[CONTROLS[mode]['toggles']['month'].value]
@@ -295,26 +294,27 @@ def repoframe_page():
             ui.label('Report by Customers')
             CONTROLS['one']={}
             CONTROLS['one']['toggles']=buildToggles('one')
-            CONTROLS['one']['refresh']=ui.button('Refresh', on_click=lambda: refresh('one'))
+            refresh('one')  # Initial data load
         with ui.tab_panel(two).classes(GEN_CLASSES):
             ui.label('Report by Tag')
             CONTROLS['two']={}
             CONTROLS['two']['toggles']=buildToggles('two')
-            CONTROLS['two']['refresh']=ui.button('Refresh', on_click=lambda: refresh('two'))
+            refresh('two')  
         with ui.tab_panel(three).classes(GEN_CLASSES):
             ui.label('Report by Day/Month')
             CONTROLS['three']={}
             CONTROLS['three']['toggles']=buildToggles('three')
-            CONTROLS['three']['refresh']=ui.button('Refresh', on_click=lambda: refresh('three'))
+            refresh('three')
         with ui.tab_panel(four).classes(GEN_CLASSES):
             ui.label('Heatmap')
             CONTROLS['four']={}
             CONTROLS['four']['toggles']=buildToggles('four',onlyYears=True)
             CONTROLS['four']['refresh']=ui.button('Refresh', on_click=lambda: refresh('four'))
+            refresh('four')  
         with ui.tab_panel(five).classes(GEN_CLASSES):
             ui.label('Monthly Table')
             CONTROLS['five']={}
             CONTROLS['five']['toggles']=buildToggles('five')
-            CONTROLS['five']['refresh']=ui.button('Refresh', on_click=lambda: refresh('five'))
+            refresh('five')
                 
     footer()
